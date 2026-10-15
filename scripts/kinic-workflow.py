@@ -308,6 +308,8 @@ def main():
                     raise
                 result = {'role': role, 'state': 'error',
                           'remote_checked': False, 'error': str(exc)}
+            if project.version == 2 and args.command in ('pull', 'push'):
+                project.cache_manifest(manifest)
             print(json.dumps({**workflow_context, **result}, ensure_ascii=False))
             if args.command == 'check' and result['state'] != 'clean':
                 exit_code = 1

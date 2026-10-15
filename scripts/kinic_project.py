@@ -174,7 +174,12 @@ def initialize(cwd, database_id, scope, cli_path='kinic-vfs-cli',
             if old.get('legacy_workflow_id'):
                 project._migrate_legacy()
             return old
-    executable = shutil.which(cli_path) or cli_path
+    located = shutil.which(cli_path)
+    executable = located or cli_path
+    if located or os.path.dirname(executable):
+        # Resolve relative PATH entries and explicit paths against the invoking
+        # shell's cwd before transport changes cwd to the selected checkout.
+        executable = str(Path(executable).resolve())
     invoke = run if run is not None else lambda args: _invoke(executable, root, args)
     args = ['--database-id', database_id, '--identity-mode', 'identity']
     if canister_id:
@@ -281,10 +286,18 @@ class Project:
         wid = self.config['legacy_workflow_id']
         journal = self._state(self.directory / 'journals' / (wid + '.json'))
         if not journal.exists():
-            record = dict(version=1, id=wid, title='Imported workflow',
-                          nonce=str(uuid.uuid4()), state='initializing', legacy=True,
-                          artifacts=self.config['legacy_artifacts'],
-                          project_fingerprint=fingerprint(self.config))
+            existing = self._read_node(self._manifest_path(wid))
+            if existing:
+                record = json.loads(existing['content'])
+                self._validate_manifest(record, workflow_id=wid, ready_required=False)
+                if record.get('legacy') is not True:
+                    raise ProjectError('migration manifest is not a legacy workflow')
+                self._verify_owner(existing, record, 'manifest')
+            else:
+                record = dict(version=1, id=wid, title='Imported workflow',
+                              nonce=str(uuid.uuid4()), state='initializing', legacy=True,
+                              artifacts=self.config['legacy_artifacts'],
+                              project_fingerprint=fingerprint(self.config))
             self._save_state(journal, record)
         return self.new(resume=wid)
 
@@ -481,10 +494,14 @@ class Project:
 
     def use(self, workflow_id, session):
         manifest = self.resolve(workflow_id=workflow_id)
-        self._save_state(self.directory / 'manifests' / (manifest['id'] + '.json'), manifest)
+        self.cache_manifest(manifest)
         binding = dict(session_id=session, workflow_id=manifest['id'], project_fingerprint=fingerprint(self.config))
         self._save_state(self._binding_path(session), binding)
         return binding
+
+    def cache_manifest(self, manifest):
+        self._validate_manifest(manifest)
+        self._save_state(self.directory / 'manifests' / (manifest['id'] + '.json'), manifest)
 
     def resolve(self, session=None, workflow_id=None, remote=True):
         bound = None

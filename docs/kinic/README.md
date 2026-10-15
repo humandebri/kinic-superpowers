@@ -25,8 +25,10 @@ python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init --database-id D
 
 If necessary, provide `--cli /absolute/path/to/kinic-vfs-cli` and a human-authorized
 `--allow-non-ii-identity` at initialization. The adapter saves the CLI location,
-endpoint and exact principal in Git-ignored `.kinic-superpowers.json`. It checks
-the active principal on access and stops on mismatch without switching identity.
+endpoint and exact principal in Git-ignored `.kinic-superpowers.json`. Explicit
+CLI paths and relative PATH entries are resolved to an absolute path before
+saving, so they remain usable from another checkout. The adapter checks the
+active principal on access and stops on mismatch without switching identity.
 Initialization verifies access; workflow creation below creates pages.
 
 Worktrees discover the main checkout's connection automatically. Working copies,
@@ -59,6 +61,8 @@ keep it until initialization has finished.
 `status` reports local baselines and dirty copies; it does not check the remote.
 Version 2 artifact results also include `workflow_id` and `workflow_title`, so
 the selected case can be checked without interpreting a document path.
+Successful `pull` and `push` commands also cache the verified manifest, allowing
+later local `status` with an explicit `--workflow ID` and no chat binding.
 `check ROLE` reads the remote and compares its revision to the baseline and
 local file without updating any document or snapshot. Omit ROLE to check all
 configured artifacts. Each JSON record has a `state`: `clean`, `local_changed`,

@@ -80,6 +80,31 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(json.loads(out)['workflow_title'], 'Example feature')
         self.project.resolve.assert_called_once_with(session='chat-a', workflow_id=None, remote=False)
         self.project.transport.assert_not_called()
+        self.project.cache_manifest.assert_not_called()
+
+    def test_explicit_workflow_pull_preserves_manifest_for_local_status(self):
+        from test_project import Fake, p as runtime
+        fake = Fake()
+        runtime.initialize(self.root, 'db', '/Knowledge/tests', run=fake)
+        primary = runtime.Project(self.root, run=fake)
+        manifest = primary.new('Automated feature')
+        checkout = self.root / 'automation'
+        checkout.mkdir()
+        project = runtime.Project(checkout, config_path=primary.config_path, run=fake)
+        self.module.Project.return_value = project
+        self.module.ProjectError = runtime.ProjectError
+        before = {str(path): path.read_bytes() for path in checkout.rglob('*') if path.is_file()}
+        code, _, _ = self.invoke('--workflow', manifest['id'], 'check', 'spec')
+        self.assertEqual(code, 1)  # untracked; check must remain read-only
+        self.assertEqual(before, {str(path): path.read_bytes() for path in checkout.rglob('*') if path.is_file()})
+        code, _, _ = self.invoke('--workflow', manifest['id'], 'pull', 'spec')
+        self.assertEqual(code, 0)
+        calls = len(fake.calls)
+        code, out, _ = self.invoke('--workflow', manifest['id'], 'status', 'spec')
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)['workflow_title'], 'Automated feature')
+        self.assertFalse(json.loads(out)['dirty'])
+        self.assertEqual(len(fake.calls), calls)
 
     def test_discovered_legacy_worktree_does_not_use_main_checkout_copy(self):
         main = self.root / 'main'

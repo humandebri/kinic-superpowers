@@ -1,7 +1,9 @@
 """Project/workflow contracts against an in-memory CLI."""
 import importlib.util
 import json
+import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 
@@ -195,6 +197,76 @@ class ProjectTests(unittest.TestCase):
         config = p.initialize(self.root, 'db', '/Knowledge/tests', migrate=True, run=self.fake)
         manifest = p.Project(self.root, run=self.fake).resolve(workflow_id=config['legacy_workflow_id'])
         self.assertEqual(manifest['state'], 'ready')
+
+    def test_migration_can_recover_in_another_checkout_without_local_journal(self):
+        legacy = {'version': 1, 'database_id': 'db', 'artifacts': {
+            'spec': {'path': '/Knowledge/old.md', 'local': 'docs/old.md'}}}
+        self.project.config_path.write_text(json.dumps(legacy))
+        self.fake.nodes['/Knowledge/old.md'] = {'path': '/Knowledge/old.md', 'kind': 'file',
+            'content': 'approved original', 'etag': 'old-etag', 'metadata_json': '{}'}
+        config = p.initialize(self.root, 'db', '/Knowledge/tests', migrate=True, run=self.fake)
+        original_nodes = json.loads(json.dumps(self.fake.nodes))
+        other = self.root / 'other'
+        other.mkdir()
+        recovered = p.initialize(other, 'db', '/Knowledge/tests',
+                                 config_path=self.project.config_path, run=self.fake)
+        self.assertEqual(recovered, config)
+        self.assertEqual(self.fake.nodes, original_nodes)
+        project = p.Project(other, config_path=self.project.config_path, run=self.fake)
+        self.assertEqual(project.resolve(workflow_id=config['legacy_workflow_id'])['state'], 'ready')
+
+    def test_relative_cli_path_is_reusable_from_another_checkout(self):
+        isolated = self.root / 'relative-cli'
+        isolated.mkdir()
+        executable = isolated / 'kinic'
+        executable.write_text(f'#!{sys.executable}\nimport json, sys\n'
+            'if "show" in sys.argv: print(json.dumps({"principal": "principal-a"}))\n'
+            'elif "current" in sys.argv: print(json.dumps({"canister_id": "canister", "replica_host": "https://example.invalid"}))\n'
+            'else: print("{}")\n')
+        executable.chmod(0o755)
+        config = p.initialize(isolated, 'db', '/Knowledge/tests',
+                              cli_path=os.path.relpath(executable),
+                              config_path=isolated / '.kinic-superpowers.json')
+        self.assertEqual(config['cli'], str(executable.resolve()))
+        other = self.root / 'other'
+        other.mkdir()
+        project = p.Project(other, config_path=isolated / '.kinic-superpowers.json')
+        project._validate_identity()
+
+    def test_incomplete_migration_resumes_from_remote_in_another_checkout(self):
+        legacy = {'version': 1, 'database_id': 'db', 'artifacts': {
+            'spec': {'path': '/Knowledge/old.md', 'local': 'docs/old.md'}}}
+        self.project.config_path.write_text(json.dumps(legacy))
+        with self.assertRaisesRegex(p.ProjectError, 'legacy artifact missing'):
+            p.initialize(self.root, 'db', '/Knowledge/tests', migrate=True, run=self.fake)
+        config = json.loads(self.project.config_path.read_text())
+        manifest_path = self.project._manifest_path(config['legacy_workflow_id'])
+        original_nonce = json.loads(self.fake.nodes[manifest_path]['content'])['nonce']
+        self.fake.nodes['/Knowledge/old.md'] = {'path': '/Knowledge/old.md', 'kind': 'file',
+            'content': 'approved original', 'etag': 'old-etag', 'metadata_json': '{}'}
+        other = self.root / 'other'
+        other.mkdir()
+        p.initialize(other, 'db', '/Knowledge/tests', config_path=self.project.config_path, run=self.fake)
+        record = json.loads(self.fake.nodes[manifest_path]['content'])
+        self.assertEqual(record['state'], 'ready')
+        self.assertEqual(record['nonce'], original_nonce)
+        self.assertEqual(self.fake.nodes['/Knowledge/old.md']['etag'], 'old-etag')
+
+    def test_recovered_migration_rejects_foreign_manifest_before_saving_journal(self):
+        legacy = {'version': 1, 'database_id': 'db', 'artifacts': {
+            'spec': {'path': '/Knowledge/old.md', 'local': 'docs/old.md'}}}
+        self.project.config_path.write_text(json.dumps(legacy))
+        self.fake.nodes['/Knowledge/old.md'] = {'path': '/Knowledge/old.md', 'kind': 'file',
+            'content': 'approved original', 'etag': 'old-etag', 'metadata_json': '{}'}
+        config = p.initialize(self.root, 'db', '/Knowledge/tests', migrate=True, run=self.fake)
+        self.fake.nodes[self.project._manifest_path(config['legacy_workflow_id'])]['metadata_json'] = '{}'
+        original_nodes = json.loads(json.dumps(self.fake.nodes))
+        other = self.root / 'other'
+        other.mkdir()
+        with self.assertRaisesRegex(p.ProjectError, 'foreign node collision'):
+            p.initialize(other, 'db', '/Knowledge/tests', config_path=self.project.config_path, run=self.fake)
+        self.assertFalse((other / '.superpowers/kinic-project/journals').exists())
+        self.assertEqual(self.fake.nodes, original_nodes)
 
     def test_scope_change_invalidates_old_session_binding(self):
         a = self.project.new('A')
