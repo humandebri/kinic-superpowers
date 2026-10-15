@@ -1,4 +1,4 @@
-# kinic-superpowers（仮称）
+# kinic-superpowers
 
 Superpowers の開発手順を kinic-wiki を作業の正本として進めるためのプロジェクト。
 
@@ -31,8 +31,10 @@ Superpowers の上流履歴を取得し、`feat/kinic-workflow` ブランチで�
 検証結果は `docs/kinic/live-check-2026-10-15.json` を参照。
 実際の機能追加（read-only check）を題材に、wiki 上の設計・計画と人間の承認、TDD 実装、初見エージェント試用、独立レビュー・修正・再レビュー、完了記録まで実行した。
 初見エージェントの結果は `docs/reports/2026-10-15-freshness-v1.md` と `v2.md`、実 DB の追加検証は `docs/kinic/check-live-2026-10-15.json` を参照。
-クリーンな製品セッションで、インストール済みプラグインが自動起動する確認は未実施。
-GitHub 上のリポジトリ作成・push・プラグインのインストールは行っていない。
+接続設定の保存、複数案件の自動作成、チャットごとの選択、ワークツリー分離、途中作成からの復旧を実装した。
+Codex プラグインをローカル marketplace からインストールし、通常の hook 信頼登録を経て、実 Codex CLI の新規セッションで案件選択と設計開始、別セッションからの再開を確認した。
+セットアップは [Codex 導入手順](docs/kinic/codex.md)、詳細な検証結果は [導入検証](docs/kinic/onboarding-2026-10-15.md) を参照。
+GitHub 上のリポジトリ作成・push は行っていない。
 
 ## 参照
 

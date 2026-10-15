@@ -1,9 +1,11 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback
+description: "Use in a configured Kinic Superpowers project. Use when starting feature work that needs isolation from current workspace or before executing implementation plans - ensures an isolated workspace exists via native tools or git worktree fallback"
 ---
 
 # Using Git Worktrees
+
+Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

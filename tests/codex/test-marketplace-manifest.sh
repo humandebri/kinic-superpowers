@@ -22,10 +22,10 @@ def assert_equal(actual, expected, label):
     if actual != expected:
         raise AssertionError(f"{label}: expected {expected!r}, got {actual!r}")
 
-assert_equal(marketplace.get("name"), "superpowers-dev", "marketplace name")
+assert_equal(marketplace.get("name"), "kinic-superpowers-local", "marketplace name")
 assert_equal(
     marketplace.get("interface", {}).get("displayName"),
-    "Superpowers Dev",
+    "Kinic Superpowers Local",
     "marketplace display name",
 )
 
@@ -33,11 +33,11 @@ plugins = marketplace.get("plugins")
 if not isinstance(plugins, list):
     raise AssertionError("plugins must be a list")
 
-matching_plugins = [plugin for plugin in plugins if plugin.get("name") == "superpowers"]
-assert_equal(len(matching_plugins), 1, "superpowers plugin entry count")
+matching_plugins = [plugin for plugin in plugins if plugin.get("name") == "kinic-superpowers"]
+assert_equal(len(matching_plugins), 1, "kinic-superpowers plugin entry count")
 
 plugin = matching_plugins[0]
-assert_equal(plugin.get("source"), {"source": "url", "url": "./"}, "plugin source")
+assert_equal(plugin.get("source"), {"source": "local", "path": "./"}, "plugin source")
 assert_equal(
     plugin.get("policy"),
     {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
@@ -52,25 +52,24 @@ if not plugin_manifest.exists():
 manifest = json.loads(plugin_manifest.read_text(encoding="utf-8"))
 assert_equal(manifest.get("name"), plugin.get("name"), "plugin manifest name")
 
-# Codex auto-discovers a plugin's hooks/hooks.json whenever the Codex manifest
-# has no `hooks` field: load_plugin_hooks falls back to a hardcoded
-# DEFAULT_HOOKS_CONFIG_FILE = "hooks/hooks.json" and registers it. That file is
-# the Claude Code SessionStart hook, it is tracked in this repo, and this
-# marketplace installs the whole repo root (source url "./"), so on Codex the
-# fallback re-registers the SessionStart hook and its install-time trust prompt.
-# Declaring an empty inline hooks object ({}) parses as an empty inline hook set
-# and suppresses the auto-discovery. An absent field, an empty array ([]), and
-# an empty inline list all collapse back to the fallback, so the value must be
-# exactly an empty object.
-hooks_config = repo_root / "hooks" / "hooks.json"
-if not hooks_config.exists():
-    raise AssertionError("hooks/hooks.json must exist (Claude Code SessionStart hook)")
-
-assert_equal(
-    manifest.get("hooks"),
-    {},
-    "Codex manifest must declare empty hooks {} to suppress hooks/hooks.json auto-discovery",
-)
+# An explicit Codex-only hook file prevents discovery of the retained
+# Claude hook. All referenced local entrypoints must ship with this source.
+assert_equal(manifest.get("hooks"), "./hooks/codex-hooks.json", "Codex hook path")
+hook_path = repo_root / manifest["hooks"]
+hooks = json.loads(hook_path.read_text(encoding="utf-8"))
+entries = hooks.get("hooks", {}).get("SessionStart", [])
+assert_equal(len(entries), 1, "SessionStart entry count")
+entry = entries[0]
+import re
+for source in ("startup", "resume", "compact"):
+    if not re.search(entry["matcher"], source):
+        raise AssertionError(f"SessionStart must match {source}")
+command = entry["hooks"][0]
+assert_equal(command.get("type"), "command", "hook type")
+assert_equal(command.get("command"), 'python3 "${PLUGIN_ROOT}/hooks/codex-session-start.py"', "local hook command")
+for relative in ("hooks/codex-session-start.py", "scripts/kinic-workflow.py", "scripts/kinic_project.py"):
+    if not (repo_root / relative).is_file():
+        raise AssertionError(f"missing local plugin entrypoint: {relative}")
 
 print("Codex marketplace manifest looks good")
 PY

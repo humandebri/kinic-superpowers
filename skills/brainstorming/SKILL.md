@@ -1,11 +1,11 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation)."
+description: "Use in a configured Kinic Superpowers project. You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation)."
 ---
 
 ## Kinic Wiki integration
 
-With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Follow its Brainstorming contract: pull the configured spec/progress, write the design to the configured working copy, push it, and bind human approval to its acknowledged wiki etag. These paths and handoff rules replace the local-only design path below.
+First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
 
 
 # Brainstorming
@@ -140,7 +140,7 @@ words. They can override it.
 |------|----------------------|------|
 | A quick, clear task | the request itself | do it |
 | A small change | in chat | build it through the normal workflow |
-| A project with a written design | a written design document | a full plan (for software: superpowers:writing-plans) |
+| A project with a written design | a written design document | a full plan (for software: kinic-superpowers:writing-plans) |
 
 If it grows mid-task, stop, say so, and step up a size.
 
@@ -194,7 +194,7 @@ stays labeled throwaway, and keeping what it produced is a new request
 that comes back through this gate.
 
 After a project's document is approved, the next step is the plan. For
-software, invoke superpowers:writing-plans and no other skill.
+software, invoke kinic-superpowers:writing-plans and no other skill.
 </HARD-GATE>
 
 ## Red Flags

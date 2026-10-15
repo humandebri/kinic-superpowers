@@ -1,0 +1,187 @@
+{
+  "date": "2026-10-15",
+  "surface": "Codex native CLI 0.162.0-alpha.17.2; installed local plugin; not desktop UI",
+  "plugin_id": "kinic-superpowers@kinic-superpowers-local",
+  "plugin_path": "/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0",
+  "database_id": "db_ceifht7sc2lh",
+  "scope": "/Knowledge/kinic-superpowers/onboarding-20261015",
+  "hook_trust": "normal interactive /hooks review and Trust; no bypass",
+  "tests": {
+    "command": "python3 -m unittest discover -s tests/kinic -q",
+    "passed": 73
+  },
+  "sessions": [
+    {
+      "name": "codex-new-b",
+      "prompt": "起動確認 B で簡単なTODOツールを作りたい。まず設計の相談から始めて。実装とwiki更新はまだしないで。",
+      "thread_id": "01a13dd9-e3cc-71d3-9fde-2681296b1e50",
+      "final": "「起動確認 B」を選択し、既存の設計・進捗を確認しました。現在は設計段階で、仕様はまだ空です。実装と wiki 更新はしていません。\n\n`kinic-superpowers:brainstorming` を使って相談を進めます。質問を省いて設計案から始めたい場合は、そう伝えてください。\n\nまず、この TODO ツールを使いたくなるのは、日常のどんな場面ですか？",
+      "commands": [
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/SKILL.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/references/kinic-workflow.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd9-e3cc-71d3-9fde-2681296b1e50 workflow list'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/brainstorming/SKILL.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/references/codex-tools.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd9-e3cc-71d3-9fde-2681296b1e50 workflow use 3fb47644-bf8d-4bd8-9367-23a4436a47a1'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd9-e3cc-71d3-9fde-2681296b1e50 check'",
+          "exit_code": 1
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd9-e3cc-71d3-9fde-2681296b1e50 pull spec'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd9-e3cc-71d3-9fde-2681296b1e50 pull progress'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat .superpowers/workflows/3fb47644-bf8d-4bd8-9367-23a4436a47a1/spec.md .superpowers/sdd/3fb47644-bf8d-4bd8-9367-23a4436a47a1/progress.md'",
+          "exit_code": 0
+        }
+      ],
+      "events_sha256": "f9e1a75f67ece0c9b1ee842d9c7eae178a27f504873a56c838465a657ee8e665"
+    },
+    {
+      "name": "codex-resume-a",
+      "prompt": "再開して、選択中の案件と現在の状態だけ確認して。別チャットで起動確認 B を選択した後です。製品コードとwiki文書は更新しないで。操作で使いづらかったところも簡潔に教えて。",
+      "thread_id": "01a13dd6-e20d-7de3-b8fc-7d49417c0755",
+      "final": "このチャットの選択案件は **「起動確認 A」** のままです。別チャットでの B 選択による切り替わりはありません。\n\n- 現在：**Design**\n- 履歴：初期化のみ\n- 仕様・計画・レビュー：見出しのみ。承認記録なし\n- wiki とローカルの版は一致し、取得も成功しました。\n\n使いづらかった点：`status` に案件名が表示されず、UUID と文書内容で照合する必要があります。また、`status` だけでは wiki の最新状態を確認できず、`check` と文書取得が別途必要です。\n\n製品コードと wiki 文書は更新していません。",
+      "commands": [
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 status'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 check'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 pull spec'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 pull plan'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 pull progress'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'python3 /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py --config /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json --project-root /Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo --session 01a13dd6-e20d-7de3-b8fc-7d49417c0755 pull review'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nwid='02f0aea9-38ee-451c-bd4b-a75dd913e6d5'\nfor p in [Path(f'.superpowers/workflows/{wid}/spec.md'),Path(f'.superpowers/workflows/{wid}/{wid}.md'),Path(f'.superpowers/sdd/{wid}/progress.md'),Path(f'.superpowers/workflows/{wid}/review.md')]:\n print(f'\\\\n{p}\\\\n{p.read_text()}')\nPY\"",
+          "exit_code": 0
+        }
+      ],
+      "events_sha256": "96be77896f2702f0ad60d7d84820a10e59472d163e2d8b76fe3352ed452e3c7e"
+    },
+    {
+      "name": "codex-unselected",
+      "prompt": "Let's make a react todo list",
+      "thread_id": "01a13ddc-064f-7270-ad12-ed3761ad57ab",
+      "final": "Which workflow should I use for the React todo list?\n\n- **Create a new “React todo list” workflow** (recommended)\n- Imported workflow\n- Live recovery and stale-conflict verification\n- 起動確認 A\n- 起動確認 B\n\nThe project’s [workflow instructions](/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/references/kinic-workflow.md) require me to “Ask which existing workflow to select” before proceeding.",
+      "commands": [
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/SKILL.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/references/kinic-workflow.md'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' workflow list\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat /Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/using-superpowers/references/codex-tools.md'",
+          "exit_code": 0
+        }
+      ],
+      "events_sha256": "982e4aac42b2d3fb2f540f5b5080931949c35554ba134ceae48d2c97eec85a1f"
+    },
+    {
+      "name": "codex-new-from-chat",
+      "prompt": "新しい React todo list 案件を作り、設計の相談を始めて。コード編集はまだしないで。",
+      "thread_id": "01a13ddc-064f-7270-ad12-ed3761ad57ab",
+      "final": "新しい「React todo list」案件を作成し、この会話に紐づけました。設計相談から始め、コードはまだ編集しません。\n\nこのTodoリストは、誰がどんな場面で使うものを考えていますか？",
+      "commands": [
+        {
+          "command": "/bin/zsh -lc \"cat '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/skills/brainstorming/SKILL.md'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' workflow new --title 'React todo list'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' workflow use c0c49f25-e4cd-467e-a6c7-ef112535ecc7\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' check\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' pull spec\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"python3 '/Users/0xhude/.codex/plugins/cache/kinic-superpowers-local/kinic-superpowers/7.0.0/scripts/kinic-workflow.py' --config '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json' --project-root '/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo' --session '01a13ddc-064f-7270-ad12-ed3761ad57ab' pull progress\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"cat '.superpowers/workflows/c0c49f25-e4cd-467e-a6c7-ef112535ecc7/spec.md' '.superpowers/sdd/c0c49f25-e4cd-467e-a6c7-ef112535ecc7/progress.md'\"",
+          "exit_code": 0
+        }
+      ],
+      "events_sha256": "3186017b7c78f44201e80b619c3e72738ce922e6ca2a2748878cb7e711e099fc"
+    }
+  ],
+  "initial_a": {
+    "thread_id": "01a13dd6-e20d-7de3-b8fc-7d49417c0755",
+    "workflow_id": "02f0aea9-38ee-451c-bd4b-a75dd913e6d5",
+    "final": "「起動確認 A」をこのセッションに紐付け、wiki の最新状態を確認しました。\n\n- 案件 ID：`02f0aea9-38ee-451c-bd4b-a75dd913e6d5`\n- 現在の段階：Design\n- 履歴：案件の初期化のみ\n- 仕様・計画・レビュー・完了文書：見出しのみ\n- 承認・次の作業・阻害事項：記載なし\n- ローカル Git：`main`、コミットなし\n\n製品コードと wiki 文書は変更していません。確認用のローカル文書取得とセッションの紐付けのみ行いました。"
+  },
+  "compaction": {
+    "thread_id": "01a13dd6-e20d-7de3-b8fc-7d49417c0755",
+    "command": "/compact in native Codex TUI",
+    "events": [
+      "2026-10-15T04:39:55.040Z"
+    ],
+    "hook_context_timestamps": [
+      "2026-10-15T04:38:38.525Z",
+      "2026-10-15T04:40:44.030Z",
+      "2026-10-15T04:40:44.054Z"
+    ],
+    "final": "圧縮後も、このチャットの選択案件は **「起動確認 A」** です。B への切り替わりはありません。\n\n- 現在：**Design**。履歴は初期化のみ。\n- 仕様・計画・レビューは見出しのみで、承認記録なし。\n- wiki の確認・取得に成功し、ローカルとの版も一致しています。\n\n改善後の `status` には案件名と ID が表示され、UUID の照合が不要になりました。案件確認はしやすくなっています。一方、長い JSON が文書ごとに並ぶ点と、最新状態の確認に別途 `check` が必要な点は残っています。\n\n製品コードと wiki 文書は更新していません。"
+  },
+  "installed_source_hashes": {
+    "scripts/kinic_project.py": "b48ef2e6af9384cfee227ca03bf45b0aa88761423dbafa46325983378416f623",
+    "scripts/kinic-workflow.py": "472fdc1884d50e6c219d14e49674302eb1d98bd19345f030f7ab6bc2ab3f1594",
+    "hooks/codex-session-start.py": "bbfeef194a762cd093c50de6eb5800e1c4d116eed6e500d67da624406701e5fc",
+    "hooks/codex-hooks.json": "2bddd444dff0352c852f3ac9cad630c6192fc8448973ea058d1e765a7823509e"
+  }
+}

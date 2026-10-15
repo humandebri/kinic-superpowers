@@ -1,11 +1,11 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: "Use in a configured Kinic Superpowers project. Use when completing tasks, implementing major features, or before merging to verify work meets requirements"
 ---
 
 ## Kinic Wiki integration
 
-With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Pull spec/plan/progress/review, verify approval revisions, and give the reviewer their source etags and BASE/HEAD SHAs. Push findings and dispositions to review, then reference its acknowledged etag in progress and push progress. A local reviewer response alone is not a durable review handoff.
+First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
 
 
 # Requesting Code Review

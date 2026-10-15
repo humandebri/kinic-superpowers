@@ -1,7 +1,7 @@
 {
-  "name": "superpowers",
+  "name": "kinic-superpowers",
   "version": "7.0.0",
-  "description": "An agentic skills framework & software development methodology that works: planning, TDD, debugging, and collaboration workflows.",
+  "description": "Superpowers development workflows backed by Kinic Wiki for configured projects.",
   "author": {
     "name": "Jesse Vincent",
     "email": "jesse@fsck.com",
@@ -21,11 +21,11 @@
     "workflow"
   ],
   "skills": "./skills/",
-  "hooks": {},
+  "hooks": "./hooks/codex-hooks.json",
   "interface": {
-    "displayName": "Superpowers",
-    "shortDescription": "Planning, TDD, debugging, and delivery workflows for coding agents",
-    "longDescription": "Use Superpowers to guide agent work through brainstorming, implementation planning, test-driven development, systematic debugging, parallel execution, code review, and finish-the-branch workflows.",
+    "displayName": "Kinic Superpowers",
+    "shortDescription": "Wiki-backed planning, implementation, review and recovery",
+    "longDescription": "Use Kinic Wiki as the shared source for design, planning, progress, reviews and completion in configured development projects.",
     "developerName": "Jesse Vincent",
     "category": "Developer Tools",
     "capabilities": [

@@ -1,14 +1,14 @@
 {
-  "name": "superpowers-dev",
+  "name": "kinic-superpowers-local",
   "interface": {
-    "displayName": "Superpowers Dev"
+    "displayName": "Kinic Superpowers Local"
   },
   "plugins": [
     {
-      "name": "superpowers",
+      "name": "kinic-superpowers",
       "source": {
-        "source": "url",
-        "url": "./"
+        "source": "local",
+        "path": "./"
       },
       "policy": {
         "installation": "AVAILABLE",

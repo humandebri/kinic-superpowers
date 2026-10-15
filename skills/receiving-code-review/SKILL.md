@@ -1,9 +1,11 @@
 ---
 name: receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: "Use in a configured Kinic Superpowers project. Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation"
 ---
 
 # Code Review Reception
+
+Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

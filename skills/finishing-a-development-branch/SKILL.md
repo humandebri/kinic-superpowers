@@ -1,11 +1,11 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+description: "Use in a configured Kinic Superpowers project. Use when implementation is complete, all tests pass, and you need to decide how to integrate the work"
 ---
 
 ## Kinic Wiki integration
 
-With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Pull/read all five roles and validate approvals, reviewed HEAD and test evidence. Record completion and any created PR URL in completion, push it, then push its etag/reference in progress before cleanup. Sync failure blocks completion and workspace removal. Existing human authorization requirements for merge/push remain in force.
+First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
 
 
 # Finishing a Development Branch

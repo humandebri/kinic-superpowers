@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Version-bound working copies of existing Kinic Wiki workflow documents.
 
-Uses the installed kinic-vfs-cli for authentication and transport. No new-node
-creation: the CLI currently has no confirmed create-if-absent contract.
+Uses kinic-vfs-cli for authentication and transport. Initialize a saved connection,
+create workflows, and bind them to chats before working with wiki documents.
 """
 import argparse
 import hashlib
@@ -58,10 +58,10 @@ class CLI:
 
 
 class Workspace:
-    def __init__(self, config, run=None):
+    def __init__(self, config, run=None, data=None, root=None):
         self.config = Path(config).resolve()
-        self.root = self.config.parent
-        self.data = json.loads(self.config.read_text(encoding='utf-8'))
+        self.root = Path(root).resolve() if root is not None else self.config.parent
+        self.data = data if data is not None else json.loads(self.config.read_text(encoding='utf-8'))
         if self.data.get('version') != 1:
             raise WorkflowError('config version must be 1')
         self.database = self.data.get('database_id')
@@ -203,19 +203,95 @@ class Workspace:
         }
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--config', default='.kinic-superpowers.json')
-    parser.add_argument('--cli', default='kinic-vfs-cli', help='Kinic CLI executable path')
+def connection_flags(parser, inherited=False):
+    default = argparse.SUPPRESS if inherited else None
+    for name in ('config', 'cli', 'canister-id', 'replica-host', 'session', 'workflow', 'project-root'):
+        parser.add_argument('--' + name, default=default)
     parser.add_argument('--allow-non-ii-identity', action='store_true',
-                        help='Explicitly use the selected local icp-cli identity')
-    parser.add_argument('command', choices=['pull', 'push', 'status', 'check'])
-    parser.add_argument('role', nargs='?')
+                        default=argparse.SUPPRESS if inherited else False,
+                        help='Explicitly authorize the selected local icp-cli identity')
+
+
+def argument_parser():
+    parser = argparse.ArgumentParser(description=__doc__)
+    connection_flags(parser)
+    commands = parser.add_subparsers(dest='command', required=True)
+    init = commands.add_parser('init', help='Verify and save a repository connection')
+    connection_flags(init, inherited=True)
+    init.add_argument('--database-id', required=True)
+    init.add_argument('--scope', required=True)
+    init.add_argument('--migrate', action='store_true', help='Import an existing v1 workflow')
+    workflow = commands.add_parser('workflow', help='Create, list or select wiki workflows')
+    connection_flags(workflow, inherited=True)
+    actions = workflow.add_subparsers(dest='action', required=True)
+    new = actions.add_parser('new', help='Create a workflow, or resume incomplete initialization')
+    connection_flags(new, inherited=True)
+    new.add_argument('--title')
+    new.add_argument('--resume', metavar='WORKFLOW_ID')
+    listed = actions.add_parser('list', help='List workflows from the wiki')
+    connection_flags(listed, inherited=True)
+    use = actions.add_parser('use', help='Explicitly select a workflow for one chat')
+    connection_flags(use, inherited=True)
+    use.add_argument('workflow_id')
+    for name in ('pull', 'push', 'status', 'check'):
+        command = commands.add_parser(name)
+        connection_flags(command, inherited=True)
+        command.add_argument('role', nargs='?')
+    return parser
+
+
+def main():
+    parser = argument_parser()
     args = parser.parse_args()
+    if args.command == 'workflow' and args.action == 'use' and not args.session:
+        parser.error('workflow use requires --session SESSION')
+    # Script execution and importlib-based callers both resolve the companion
+    # runtime relative to this installation, rather than the user's project.
+    scripts_dir = str(Path(__file__).resolve().parent)
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    from kinic_project import Project, ProjectError, initialize
     try:
-        transport = CLI(args.cli, cwd=Path(args.config).resolve().parent,
-                        allow_non_ii_identity=args.allow_non_ii_identity)
-        work = Workspace(args.config, transport)
+        if args.command == 'init':
+            options = dict(cwd=Path(args.project_root or Path.cwd()),
+                           config_path=args.config, database_id=args.database_id, scope=args.scope,
+                           cli_path=args.cli or 'kinic-vfs-cli',
+                           allow_non_ii_identity=args.allow_non_ii_identity,
+                           canister_id=args.canister_id, replica_host=args.replica_host)
+            if args.migrate:
+                options['migrate'] = True
+            print(json.dumps(initialize(**options), ensure_ascii=False))
+            return 0
+        project = Project(cwd=Path(args.project_root or Path.cwd()), config_path=args.config,
+                          cli_override=args.cli,
+                          allow_non_ii_identity=args.allow_non_ii_identity)
+        if args.command == 'workflow':
+            if args.action == 'new':
+                result = project.new(title=args.title, resume=args.resume)
+                if args.session:
+                    project.use(result['id'], args.session)
+            elif args.action == 'list':
+                result = project.list()
+            else:
+                result = project.use(args.workflow_id, args.session)
+            print(json.dumps(result, ensure_ascii=False))
+            return 0
+        workflow_context = {}
+        if project.version == 1:
+            if args.workflow not in (None, 'legacy'):
+                raise WorkflowError('v1 configuration contains only the legacy workflow')
+            workspace_root = (project.root if args.project_root or args.config is None
+                              else project.config_path.parent)
+            transport = CLI(args.cli or 'kinic-vfs-cli', cwd=workspace_root,
+                            allow_non_ii_identity=args.allow_non_ii_identity)
+            work = Workspace(project.config_path, transport, root=workspace_root)
+        else:
+            manifest = project.resolve(session=args.session, workflow_id=args.workflow,
+                                       remote=args.command != 'status')
+            workflow_context = {'workflow_id': manifest['id'],
+                                'workflow_title': manifest['title']}
+            work = Workspace(project.config_path, project.transport,
+                             data=project.workspace_data(manifest), root=project.root)
         if args.command in ('pull', 'push') and args.role is None:
             raise WorkflowError('pull/push require one artifact role')
         roles = [args.role] if args.role is not None else list(work.artifacts)
@@ -227,15 +303,15 @@ def main():
         for role in roles:
             try:
                 result = getattr(work, args.command)(role)
-            except (WorkflowError, OSError, ValueError, KeyError, TypeError) as exc:
+            except (WorkflowError, ProjectError, OSError, ValueError, KeyError, TypeError) as exc:
                 if args.command != 'check':
                     raise
                 result = {'role': role, 'state': 'error',
                           'remote_checked': False, 'error': str(exc)}
-            print(json.dumps(result, ensure_ascii=False))
+            print(json.dumps({**workflow_context, **result}, ensure_ascii=False))
             if args.command == 'check' and result['state'] != 'clean':
                 exit_code = 1
-    except (WorkflowError, OSError, ValueError, KeyError, TypeError) as exc:
+    except (WorkflowError, ProjectError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f'kinic-workflow: {exc}', file=sys.stderr)
         return 1
     return exit_code

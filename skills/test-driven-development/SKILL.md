@@ -1,9 +1,11 @@
 ---
 name: test-driven-development
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: "Use in a configured Kinic Superpowers project. Use when implementing any feature or bugfix, before writing implementation code"
 ---
 
 # Test-Driven Development (TDD)
+
+Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

@@ -1,9 +1,11 @@
 ---
 name: dispatching-parallel-agents
-description: Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+description: "Use in a configured Kinic Superpowers project. Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies"
 ---
 
 # Dispatching Parallel Agents
+
+Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

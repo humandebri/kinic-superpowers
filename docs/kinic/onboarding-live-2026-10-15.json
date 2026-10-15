@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-15",
+  "database_id": "db_ceifht7sc2lh",
+  "scope": "/Knowledge/kinic-superpowers/onboarding-20261015",
+  "checks": [
+    {
+      "name": "partial_creation_resume_preserves_owned_content",
+      "passed": true,
+      "workflow_id": "5f1dd609-3c9b-4a25-92ff-edffeb8202af",
+      "state": "ready"
+    },
+    {
+      "name": "normal_pull_push",
+      "passed": true,
+      "workflow_id": "5f1dd609-3c9b-4a25-92ff-edffeb8202af",
+      "artifact": "spec"
+    },
+    {
+      "name": "worktree_connection_and_state_isolation",
+      "passed": true,
+      "primary_root": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo",
+      "secondary_root": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.worktrees/live-probe",
+      "shared_config": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/onboarding/repo/.kinic-superpowers.json"
+    },
+    {
+      "name": "stale_push_rejected_baseline_preserved",
+      "passed": true,
+      "workflow_id": "5f1dd609-3c9b-4a25-92ff-edffeb8202af",
+      "error": "Error: expected_etag does not match current etag: /Knowledge/kinic-superpowers/onboarding-20261015/workflows/5f1dd609-3c9b-4a25-92ff-edffeb8202af/spec.md"
+    },
+    {
+      "name": "another_chat_restores_from_wiki",
+      "passed": true,
+      "session": "live-recovery-chat-c",
+      "workflow_id": "5f1dd609-3c9b-4a25-92ff-edffeb8202af"
+    },
+    {
+      "name": "legacy_migration_preserves_document_etags",
+      "passed": true,
+      "workflow_id": "e64d2a2b-78d2-5e02-ba75-88088785a27b",
+      "artifact_count": 5
+    },
+    {
+      "name": "existing_workflow_documents_unchanged",
+      "passed": true,
+      "workflows": 2,
+      "artifacts": 10
+    }
+  ],
+  "workflows": [
+    {
+      "id": "5f1dd609-3c9b-4a25-92ff-edffeb8202af",
+      "title": "Live recovery and stale-conflict verification"
+    },
+    {
+      "id": "e64d2a2b-78d2-5e02-ba75-88088785a27b",
+      "title": "Imported workflow",
+      "legacy": true
+    }
+  ],
+  "preserved_workflows": [
+    "02f0aea9-38ee-451c-bd4b-a75dd913e6d5",
+    "3fb47644-bf8d-4bd8-9367-23a4436a47a1"
+  ],
+  "success": true
+}

@@ -1,11 +1,13 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
+description: "Use when starting or resuming development in a configured Kinic Superpowers project."
 ---
 
 ## Kinic Wiki integration
 
-Before choosing a workflow, check the development project root for `.kinic-superpowers.json`. If present, read `references/kinic-workflow.md` and apply it throughout the session, including after compaction. Pass its source-of-truth rules to subagents; the subagent stop below does not waive task-specific wiki obligations.
+If no `.kinic-superpowers.json` is discovered in this checkout or its shared primary checkout, stop applying this fork and return workflow choice to the host. The rules below apply only after that configuration predicate is satisfied.
+
+First read `references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
 
 
 <SUBAGENT-STOP>
@@ -32,8 +34,8 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "Let's build X" → superpowers:brainstorming first, then implementation skills.
-- "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- "Let's build X" → kinic-superpowers:brainstorming first, then implementation skills.
+- "Fix this bug" → kinic-superpowers:systematic-debugging first, then domain skills.
 
 ## Red Flags
 
