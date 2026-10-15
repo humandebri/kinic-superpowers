@@ -1,0 +1,55 @@
+diff --git a/crates/vfs_types/src/fs.rs b/crates/vfs_types/src/fs.rs
+index 519c131d..96e8a143 100644
+--- a/crates/vfs_types/src/fs.rs
++++ b/crates/vfs_types/src/fs.rs
+@@ -526,0 +527 @@ pub enum NodeMutationErrorCode {
++    #[serde(alias = "EtagConflict")]
+@@ -527,0 +529 @@ pub enum NodeMutationErrorCode {
++    #[serde(alias = "NotFound")]
+@@ -528,0 +531 @@ pub enum NodeMutationErrorCode {
++    #[serde(alias = "Forbidden")]
+@@ -529,0 +533 @@ pub enum NodeMutationErrorCode {
++    #[serde(alias = "WriteUnavailable")]
+@@ -530,0 +535 @@ pub enum NodeMutationErrorCode {
++    #[serde(alias = "InvalidOperation")]
+@@ -605,0 +611,40 @@ impl std::error::Error for NodeMutationError {}
++#[cfg(test)]
++mod mutation_error_tests {
++    use super::{NodeMutationError, NodeMutationErrorCode, WriteNodeResult};
++
++    #[test]
++    fn candid_round_trip_all_node_mutation_error_codes() {
++        for code in [
++            NodeMutationErrorCode::EtagConflict,
++            NodeMutationErrorCode::NotFound,
++            NodeMutationErrorCode::Forbidden,
++            NodeMutationErrorCode::WriteUnavailable,
++            NodeMutationErrorCode::InvalidOperation,
++        ] {
++            let encoded = candid::encode_one(code).expect("encode mutation error code");
++            let decoded = candid::decode_one::<NodeMutationErrorCode>(&encoded)
++                .unwrap_or_else(|error| panic!("decode {code:?}: {error}"));
++            assert_eq!(decoded, code);
++        }
++    }
++
++    #[test]
++    fn candid_round_trip_node_mutation_error_result() {
++        let error =
++            NodeMutationError::etag_conflict("node changed", "/work/plan.md").with_failed_index(2);
++        let encoded_error = candid::encode_one(&error).expect("encode mutation error");
++        assert_eq!(
++            candid::decode_one::<NodeMutationError>(&encoded_error).expect("decode mutation error"),
++            error
++        );
++
++        let result: Result<WriteNodeResult, NodeMutationError> = Err(error);
++        let encoded_result = candid::encode_one(&result).expect("encode write result");
++        assert_eq!(
++            candid::decode_one::<Result<WriteNodeResult, NodeMutationError>>(&encoded_result)
++                .expect("decode write result"),
++            result
++        );
++    }
++}
++

@@ -73,3 +73,7 @@ upstream Gauntlet evaluation harness, repeated behavioral micro-testing, an
 installed-harness integration test, or a live wiki end-to-end run. Those checks
 remain necessary before claiming production readiness. No task-claim/lease
 service, server-enforced approvals or atomic new-node provisioning is included.
+
+The later feature-development run is recorded in
+`e2e-workflow-2026-10-15.md`; it adds real multi-agent stage execution and wiki-only
+fresh-session recovery evidence, while retaining the automatic-bootstrap limit.

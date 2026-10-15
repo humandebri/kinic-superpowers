@@ -1,0 +1,77 @@
+{
+  "database_id": "db_ceifht7sc2lh",
+  "artifact": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+  "checks": [
+    {
+      "expected": "clean",
+      "exit_code": 0,
+      "result": {
+        "role": "probe",
+        "database_id": "db_ceifht7sc2lh",
+        "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+        "local": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/e2e/check-probe/probe.md",
+        "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031",
+        "dirty": false,
+        "remote_checked": true,
+        "state": "clean",
+        "remote_etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031"
+      },
+      "local_and_snapshot_unchanged": true
+    },
+    {
+      "expected": "remote_changed",
+      "exit_code": 1,
+      "result": {
+        "role": "probe",
+        "database_id": "db_ceifht7sc2lh",
+        "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+        "local": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/e2e/check-probe/probe.md",
+        "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031",
+        "dirty": false,
+        "remote_checked": true,
+        "state": "remote_changed",
+        "remote_etag": "v4h:6eabf6cedc96fe8076fbb03eb5c9b7a4b5839261d0b09badb8273947bbaeae39"
+      },
+      "local_and_snapshot_unchanged": true
+    },
+    {
+      "expected": "conflict",
+      "exit_code": 1,
+      "result": {
+        "role": "probe",
+        "database_id": "db_ceifht7sc2lh",
+        "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+        "local": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/e2e/check-probe/probe.md",
+        "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031",
+        "dirty": true,
+        "remote_checked": true,
+        "state": "conflict",
+        "remote_etag": "v4h:6eabf6cedc96fe8076fbb03eb5c9b7a4b5839261d0b09badb8273947bbaeae39"
+      },
+      "local_and_snapshot_unchanged": true
+    }
+  ],
+  "batch_error_check": {
+    "exit_code": 1,
+    "results": [
+      {
+        "role": "missing",
+        "state": "error",
+        "remote_checked": false,
+        "error": "kinic-vfs-cli failed: Error: node not found: /Knowledge/kinic-superpowers/e2e-check-0130dbdd324c/does-not-exist.md"
+      },
+      {
+        "role": "probe",
+        "database_id": "db_ceifht7sc2lh",
+        "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+        "local": "/Volumes/KINGSTON/KINIC/kinic-superpowers/.superpowers/e2e/check-probe/probe.md",
+        "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031",
+        "dirty": true,
+        "remote_checked": true,
+        "state": "conflict",
+        "remote_etag": "v4h:6eabf6cedc96fe8076fbb03eb5c9b7a4b5839261d0b09badb8273947bbaeae39"
+      }
+    ],
+    "later_role_checked": true
+  }
+}

@@ -2,6 +2,12 @@
 .private-journal/
 .claude/
 .superpowers/
+.kinic-superpowers.json
+# Working copies of this wiki-backed validation task; wiki retains exact bytes.
+docs/superpowers/specs/remote-check-design.md
+docs/superpowers/plans/remote-check.md
+docs/superpowers/reviews/remote-check.md
+docs/superpowers/completions/remote-check.md
 .DS_Store
 node_modules/
 inspo
