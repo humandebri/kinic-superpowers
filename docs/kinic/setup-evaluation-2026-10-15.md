@@ -52,6 +52,15 @@ the writable-role filter is specifically applied when choosing from an unlinked
 inventory. Databases without a returned name can still yield a null display
 name, so agents must not invent one.
 
+The later setup review fixed the linked/saved write-access gap described above:
+initialization and inspection now require an active, unsuspended owner/writer
+entry for the selected DB. They stop without changing configuration if access
+is read-only or revoked. Another regression uses a real Git worktree to verify
+that first initialization saves shared settings in the main checkout, keeps
+document/session state local and leaves inspection read-only. All 87 Python
+tests pass. Read-only inspection of the configured Memo database also succeeded
+without changing the saved configuration.
+
 ## Separate native CLI verification
 
 After the static evaluation, the root agent tested a real installed-plugin

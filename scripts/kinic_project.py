@@ -77,6 +77,11 @@ def _ensure_ignored(root, target):
     additions = [line for line in dict.fromkeys(paths) if line not in contents.splitlines()]
     if additions:
         ignore.write_text(contents + ('\n' if contents and not contents.endswith('\n') else '') + '\n'.join(additions) + '\n')
+    # The connection can live in the primary checkout while local copies live
+    # here. Ignore the shared configuration in its owning checkout as well.
+    _, shared = discover(root)
+    if target == shared and target.parent != root:
+        _ensure_ignored(target.parent, target)
 
 
 def discover(cwd, config_path=None):
@@ -103,8 +108,7 @@ def discover(cwd, config_path=None):
             common = directory / 'commondir'
             if common.is_file():
                 shared = (directory / common.read_text().strip()).resolve().parent / local.name
-                if shared.exists():
-                    return root, shared
+                return root, shared
     return root, local
 
 
@@ -162,6 +166,26 @@ def _database_name(databases, database_id):
     return None
 
 
+def _writable_database(item):
+    return (isinstance(item, dict) and item.get('status') == 'active'
+            and item.get('role') in ('owner', 'writer')
+            and item.get('cycles_suspended_at_ms') is None
+            and item.get('deleted_at_ms') is None
+            and isinstance(item.get('database_id'), str) and bool(item['database_id']))
+
+
+def _require_writable_database(databases, database_id):
+    if not isinstance(databases, list):
+        raise ProjectError('invalid database list response')
+    for item in databases:
+        if isinstance(item, dict) and item.get('database_id') == database_id:
+            if _writable_database(item):
+                return
+            name = _database_name(databases, database_id) or database_id
+            raise ProjectError(f'database {name!r} is not writable; choose an active owner/writer database')
+    raise ProjectError(f'database {database_id!r} is not writable; current identity has no listed write access')
+
+
 def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
                allow_non_ii_identity=False, canister_id=None, replica_host=None, run=None,
                migrate=False, config_path=None, inspect=False):
@@ -189,8 +213,10 @@ def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
         if not legacy:
             project = Project(root, target, run=run)
             project._validate_identity()
+            databases = project.transport(['database', 'list', '--json'])
+            _require_writable_database(databases, database_id)
             if inspect:
-                name = _database_name(project.transport(['database', 'list', '--json']), database_id)
+                name = _database_name(databases, database_id)
                 return {**old, 'database_name': name, 'selection_required': False, 'database_candidates': []}
             _ensure_ignored(root, target)
             if old.get('legacy_workflow_id'):
@@ -217,19 +243,15 @@ def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
     if not isinstance(principal, str) or not principal or principal == '2vxsx-fae':
         raise ProjectError('authenticated identity principal required')
     connection = invoke([*args, 'database', 'current', '--json'])
+    databases = invoke([*args, 'database', 'list', '--json'])
+    if not isinstance(databases, list):
+        raise ProjectError('invalid database list response')
     candidates = []
     if database_id is None:
         database_id = connection.get('database_id')
         if database_id is None:
-            databases = invoke([*args, 'database', 'list', '--json'])
-            if not isinstance(databases, list):
-                raise ProjectError('invalid database list response')
             for item in databases:
-                if (isinstance(item, dict) and item.get('status') == 'active'
-                        and item.get('role') in ('owner', 'writer')
-                        and item.get('cycles_suspended_at_ms') is None
-                        and item.get('deleted_at_ms') is None
-                        and isinstance(item.get('database_id'), str) and item['database_id']):
+                if _writable_database(item):
                     candidates.append({'database_id': item['database_id'],
                                        'name': item.get('name') or (item.get('metadata') or {}).get('name') or item['database_id'],
                                        'role': item['role']})
@@ -246,6 +268,7 @@ def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
         raise ProjectError('database selection required; run init --inspect and select a database by name: '
                            + (choices or 'no active writable databases found'))
     _validate_connection(config)
+    _require_writable_database(databases, database_id)
     # Pin the inspected endpoint for the authenticated access check.
     verify_args = ['--database-id', database_id, '--identity-mode', 'identity',
                    '--canister-id', config['canister_id'], '--replica-host', config['replica_host']]
@@ -253,8 +276,7 @@ def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
         verify_args += ['--allow-non-ii-identity']
     invoke([*verify_args, 'status', '--json'])
     if inspect:
-        inventory = candidates or invoke([*args, 'database', 'list', '--json'])
-        return {**config, 'database_name': _database_name(inventory, database_id),
+        return {**config, 'database_name': _database_name(databases, database_id),
                 'selection_required': False, 'database_candidates': candidates,
                 'migration_required': legacy is not None}
     _ensure_ignored(root, target)

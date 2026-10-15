@@ -31,13 +31,17 @@ endpoint and exact principal in Git-ignored `.kinic-superpowers.json`. Explicit
 CLI paths and relative PATH entries are resolved to an absolute path before
 saving, so they remain usable from another checkout. The adapter checks the
 active principal on access and stops on mismatch without switching identity.
-Initialization verifies access; workflow creation below creates pages.
+Initialization verifies active owner/writer access, including for linked or
+previously saved databases; workflow creation below creates pages. A read-only,
+suspended or inaccessible selected database stops setup without switching it.
 `--inspect` is read-only and returns named choices when selection is needed.
 An agent resolves the chosen name to `--database-id` internally. Explicit
 `--database-id` and `--scope` remain available as overrides. In Codex, simply
 request project setup; the installed `setup-kinic` skill runs this procedure.
 
-Worktrees discover the main checkout's connection automatically. Working copies,
+Worktrees discover the main checkout's connection automatically, even when the
+first initialization happens in a worktree. Setup saves the connection in the
+main checkout and ignores it in Git there. Working copies,
 baselines, initialization journals and chat bindings stay in each checkout's
 ignored `.superpowers/` directory. Do not copy these directories between worktrees.
 

@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -124,10 +125,64 @@ class ProjectTests(unittest.TestCase):
 
     def test_init_uses_linked_database_and_automatic_project_scope(self):
         root = self.setup_root()
-        config = p.initialize(root, run=self.discovery_transport(linked='db-linked'))
+        config = p.initialize(root, run=self.discovery_transport(linked='db-linked', databases=[
+            {'database_id': 'db-linked', 'name': 'Linked wiki', 'role': 'writer', 'status': 'active'}]))
         self.assertEqual(config['database_id'], 'db-linked')
         self.assertTrue(config['scope'].startswith('/Knowledge/projects/new-project-'))
         self.assertTrue(any('status' in args and 'db-linked' in args for args in self.fake.calls))
+
+    def test_first_init_in_git_worktree_shares_config_and_keeps_state_local(self):
+        main = self.root / 'git-project'
+        tree = main / '.worktrees/test'
+        main.mkdir()
+        def git(cwd, *args):
+            return subprocess.run(['git', '-c', 'commit.gpgsign=false',
+                '-c', 'user.name=Kinic test', '-c', 'user.email=test@example.invalid', *args],
+                cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
+        git(main, 'init', '-q', '-b', 'main')
+        git(main, 'commit', '-q', '--allow-empty', '-m', 'test fixture')
+        git(main, 'worktree', 'add', '-q', '--detach', str(tree), 'HEAD')
+        before = {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        proposal = p.initialize(tree, inspect=True, run=self.fake)
+        self.assertEqual(before, {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
+        config = p.initialize(tree, run=self.fake)
+        self.assertEqual(config['scope'], proposal['scope'])
+        self.assertTrue(config['scope'].startswith('/Knowledge/projects/git-project-'))
+        self.assertTrue((main / '.kinic-superpowers.json').is_file())
+        self.assertFalse((tree / '.kinic-superpowers.json').exists())
+        primary = p.Project(main, run=self.fake)
+        child = p.Project(tree, run=self.fake)
+        self.assertEqual(primary.config_path, child.config_path)
+        self.assertEqual(p.initialize(main, run=self.fake), config)
+        self.assertEqual(git(main, 'check-ignore', '.kinic-superpowers.json'), '.kinic-superpowers.json')
+        self.assertEqual(git(tree, 'check-ignore', '.superpowers/test'), '.superpowers/test')
+        case = child.new('Shared project')
+        child.use(case['id'], 'same-chat')
+        with self.assertRaisesRegex(p.ProjectError, 'no workflow selected'):
+            primary.resolve('same-chat')
+
+    def test_linked_unwritable_database_is_rejected_before_saving(self):
+        root = self.setup_root()
+        for changes in ({'role': 'reader'}, {'cycles_suspended_at_ms': 1}, {'status': 'deleted'}):
+            with self.subTest(changes=changes):
+                databases = [{'database_id': 'db-linked', 'name': 'Linked wiki', 'role': 'writer', 'status': 'active'}]
+                databases[0].update(changes)
+                databases.append({'database_id': 'db-other', 'name': 'Writable wiki', 'role': 'writer', 'status': 'active'})
+                run = self.discovery_transport(linked='db-linked', databases=databases)
+                for inspect in (True, False):
+                    with self.assertRaisesRegex(p.ProjectError, 'not writable'):
+                        p.initialize(root, inspect=inspect, run=run)
+                self.assertFalse((root / '.kinic-superpowers.json').exists())
+                self.assertFalse((root / '.gitignore').exists())
+
+    def test_saved_database_with_revoked_write_access_is_rejected_without_changes(self):
+        before = {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        run = self.discovery_transport(databases=[
+            {'database_id': 'db', 'name': 'Test wiki', 'role': 'reader', 'status': 'active'}])
+        for inspect in (True, False):
+            with self.assertRaisesRegex(p.ProjectError, 'not writable'):
+                p.initialize(self.root, inspect=inspect, run=run)
+        self.assertEqual(before, {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
 
     def test_init_selects_only_active_writable_database(self):
         root = self.setup_root()
@@ -282,6 +337,7 @@ class ProjectTests(unittest.TestCase):
         executable.write_text(f'#!{sys.executable}\nimport json, sys\n'
             'if "show" in sys.argv: print(json.dumps({"principal": "principal-a"}))\n'
             'elif "current" in sys.argv: print(json.dumps({"canister_id": "canister", "replica_host": "https://example.invalid"}))\n'
+            'elif "list" in sys.argv: print(json.dumps([{"database_id": "db", "name": "Test wiki", "role": "writer", "status": "active"}]))\n'
             'else: print("{}")\n')
         executable.chmod(0o755)
         config = p.initialize(isolated, 'db', '/Knowledge/tests',
