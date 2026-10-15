@@ -1,10 +1,13 @@
-# Superpowers
+# Kinic Superpowers
 
-> **Kinic Wiki integration fork (pilot):** This checkout adds wiki-backed design,
-> plan, progress, review and completion working copies to the upstream skills.
-> Start with [Kinic setup and limitations](docs/kinic/README.md) and
-> [project intent](PROJECT.md). The original Superpowers documentation follows.
-> No global plugin installation is performed by this checkout.
+> A fork of [obra/superpowers](https://github.com/obra/superpowers) with Kinic Wiki
+> as the source for design, plans, progress, reviews and completion. It adds
+> automatic project setup, chat-specific workflow selection and a local Codex
+> plugin for starting and resuming work. Start with
+> [Codex installation](docs/kinic/codex.md),
+> [Kinic setup and limitations](docs/kinic/README.md) and [project intent](PROJECT.md).
+> Upstream history and MIT attribution are retained. The original Superpowers
+> documentation follows; use the Kinic installation instructions for this fork.
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 

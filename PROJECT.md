@@ -24,7 +24,7 @@ Superpowers の開発手順を kinic-wiki を作業の正本として進める�
 
 ## 現在の状態
 
-Superpowers の上流履歴を取得し、`feat/kinic-workflow` ブランチで開発中。
+Superpowers の上流履歴を保持する派生版として開発中。
 既存 wiki 文書に対する取得・etag 付き書き戻し、各工程スキルの連携手順、設定例、テストを実装した。
 セットアップと制約は `docs/kinic/README.md` を参照。
 `db_ceifht7sc2lh` の専用テスト領域で、５種類の文書の往復・別作業コピーからの復元・競合拒否・未送信変更の保護を確認した。
@@ -34,7 +34,8 @@ Superpowers の上流履歴を取得し、`feat/kinic-workflow` ブランチで�
 接続設定の保存、複数案件の自動作成、チャットごとの選択、ワークツリー分離、途中作成からの復旧を実装した。
 Codex プラグインをローカル marketplace からインストールし、通常の hook 信頼登録を経て、実 Codex CLI の新規セッションで案件選択と設計開始、別セッションからの再開を確認した。
 セットアップは [Codex 導入手順](docs/kinic/codex.md)、詳細な検証結果は [導入検証](docs/kinic/onboarding-2026-10-15.md) を参照。
-GitHub 上のリポジトリ作成・push は行っていない。
+公開リポジトリは [humandebri/kinic-superpowers](https://github.com/humandebri/kinic-superpowers)。
+公開先を `origin`、上流 Superpowers を `upstream` として管理する。
 
 ## 参照
 
