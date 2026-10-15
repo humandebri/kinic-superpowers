@@ -1,7 +1,7 @@
 {
-  "name": "superpowers",
-  "version": "7.0.0",
-  "description": "Superpowers skills and runtime bootstrap for coding agents",
+  "name": "kinic-superpowers",
+  "version": "0.1.0",
+  "description": "Kinic Wiki backed development workflows and a local Codex plugin",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js",
   "keywords": [
@@ -19,5 +19,13 @@
     "skills": [
       "./skills"
     ]
+  },
+  "private": true,
+  "author": "humandebri",
+  "license": "MIT",
+  "homepage": "https://github.com/humandebri/kinic-superpowers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/humandebri/kinic-superpowers.git"
   }
 }

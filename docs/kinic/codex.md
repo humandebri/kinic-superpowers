@@ -6,6 +6,16 @@ workflow guidance only in projects with `.kinic-superpowers.json`. Existing
 upstream Claude/Cursor packaging is retained but this version's automatic
 project/session integration is verified separately for Codex.
 
+The Kinic fork starts at version `0.1.0`, independently of its Superpowers 7.0.0
+baseline. Its maintainer and distribution URL are
+[humandebri/kinic-superpowers](https://github.com/humandebri/kinic-superpowers).
+The original MIT copyright remains in `LICENSE`. Version updates track the
+Codex manifest and root package through `.version-bump.json`; retained manifests
+for other harnesses keep their upstream metadata and are not Kinic distributions.
+The root package is private because installation uses the local marketplace,
+not npm publication. No plugin-specific privacy policy or terms are declared;
+the manifest no longer presents GitHub's general policies as this plugin's own.
+
 ## Install and trust
 
 Use a **local marketplace**, not a public directory submission. Lifecycle hooks
