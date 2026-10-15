@@ -6,6 +6,8 @@ description: "Use when starting or resuming development in a configured Kinic Su
 ## Kinic Wiki integration
 
 If no `.kinic-superpowers.json` is discovered in this checkout or its shared primary checkout, stop applying this fork and return workflow choice to the host. The rules below apply only after that configuration predicate is satisfied.
+For an explicit request to connect or initialize Kinic Wiki, use
+`kinic-superpowers:setup-kinic`; that setup skill also applies before configuration.
 
 First read `references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
 

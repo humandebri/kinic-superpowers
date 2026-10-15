@@ -57,19 +57,28 @@ alongside existing hooks. Keep Python 3 on the hook process's PATH.
 
 ## Initialize and use
 
-From the development checkout run the installed adapter, replacing the plugin
-path and selecting your own scope. Identity authorization must come from the
-human; preserve its authorized principal in settings and never switch silently.
+In the application checkout, ask Codex: "Set up this project for Kinic Wiki."
+The `setup-kinic` skill applies even before configuration exists. It discovers
+the CLI connection and databases, reuses a saved/linked or sole writable DB, and
+generates a project scope. With multiple choices it asks for a database by name;
+the agent handles the ID. An earlier explicit database choice in the conversation
+can be reused. Identity authorization must come from the human; never switch it.
+
+The underlying commands are:
 
 ```bash
-python3 /absolute/plugin/path/scripts/kinic-workflow.py init --database-id DB --scope /Knowledge/projects/example
+python3 /absolute/plugin/path/scripts/kinic-workflow.py init --inspect
+python3 /absolute/plugin/path/scripts/kinic-workflow.py init
 ```
 
 If the CLI is outside PATH, add `--cli /absolute/path/to/kinic-vfs-cli` once at
 initialization. For a human-authorized non-II identity, also add
 `--allow-non-ii-identity` once. Both settings and the exact principal are saved;
 normal workflow commands need neither connection nor authentication flags.
-The scope must be a canonical path below `/Knowledge/`.
+Optional `--database-id` and `--scope` still override discovery. An explicit scope
+must be a canonical path below `/Knowledge/`. A generated scope includes the
+repository name and a short hash of its location to separate same-named clones;
+once saved, the scope is reused even if the repository moves.
 
 Open a **new chat** in the configured checkout and request development normally.
 The hook supplies an exact shell-quoted command with config, checkout and

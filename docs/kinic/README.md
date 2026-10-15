@@ -9,8 +9,9 @@ Codex chat. Source editing, test execution and Git operations run locally.
 
 - Python 3.9+ and an installed, authenticated `kinic-vfs-cli` supporting
   `read-node --json` and `write-node --expected-etag --json`.
-- Select the intended database and a dedicated scope through inventory. The
-  example `/Knowledge/projects/example` is illustrative, not a discovered scope.
+- The adapter discovers the saved/CLI-linked or sole active writable database.
+  With multiple candidates, choose a database by name in chat. The adapter
+  generates a dedicated project scope; no manual DB ID or path is needed.
 - Set `KINIC_SUPERPOWERS_ROOT` to this fork's absolute directory, and
   run the adapter from the application checkout. No credentials go in config.
 - Follow [Codex installation and hook trust](codex.md) to install this fork as
@@ -20,7 +21,8 @@ Codex chat. Source editing, test execution and Git operations run locally.
 Initialize once:
 
 ```bash
-python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init --database-id DB --scope /Knowledge/projects/example
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init --inspect
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init
 ```
 
 If necessary, provide `--cli /absolute/path/to/kinic-vfs-cli` and a human-authorized
@@ -30,6 +32,10 @@ CLI paths and relative PATH entries are resolved to an absolute path before
 saving, so they remain usable from another checkout. The adapter checks the
 active principal on access and stops on mismatch without switching identity.
 Initialization verifies access; workflow creation below creates pages.
+`--inspect` is read-only and returns named choices when selection is needed.
+An agent resolves the chosen name to `--database-id` internally. Explicit
+`--database-id` and `--scope` remain available as overrides. In Codex, simply
+request project setup; the installed `setup-kinic` skill runs this procedure.
 
 Worktrees discover the main checkout's connection automatically. Working copies,
 baselines, initialization journals and chat bindings stay in each checkout's

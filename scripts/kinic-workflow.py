@@ -218,8 +218,9 @@ def argument_parser():
     commands = parser.add_subparsers(dest='command', required=True)
     init = commands.add_parser('init', help='Verify and save a repository connection')
     connection_flags(init, inherited=True)
-    init.add_argument('--database-id', required=True)
-    init.add_argument('--scope', required=True)
+    init.add_argument('--database-id', help='Override the saved, linked or sole writable database')
+    init.add_argument('--scope', help='Override the saved or automatically generated project scope')
+    init.add_argument('--inspect', action='store_true', help='Discover setup settings and named database choices without saving')
     init.add_argument('--migrate', action='store_true', help='Import an existing v1 workflow')
     workflow = commands.add_parser('workflow', help='Create, list or select wiki workflows')
     connection_flags(workflow, inherited=True)
@@ -260,6 +261,8 @@ def main():
                            canister_id=args.canister_id, replica_host=args.replica_host)
             if args.migrate:
                 options['migrate'] = True
+            if args.inspect:
+                options['inspect'] = True
             print(json.dumps(initialize(**options), ensure_ascii=False))
             return 0
         project = Project(cwd=Path(args.project_root or Path.cwd()), config_path=args.config,

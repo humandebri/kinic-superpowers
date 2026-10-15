@@ -49,6 +49,14 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(self.module.initialize.call_args.kwargs['database_id'], 'db-test')
         self.assertTrue(self.module.initialize.call_args.kwargs['allow_non_ii_identity'])
 
+    def test_init_can_discover_settings_without_manual_ids_or_paths(self):
+        code, _, _ = self.invoke('init', '--inspect')
+        self.assertEqual(code, 0)
+        options = self.module.initialize.call_args.kwargs
+        self.assertIsNone(options['database_id'])
+        self.assertIsNone(options['scope'])
+        self.assertTrue(options['inspect'])
+
     def test_new_can_bind_current_chat(self):
         code, _, _ = self.invoke('workflow', 'new', '--title', 'Example', '--session', 'chat-a')
         self.assertEqual(code, 0)

@@ -23,6 +23,8 @@ class Fake:
         self.calls.append(args)
         if 'show' in args and 'identity' in args:
             return {'principal': self.principal}
+        if 'database' in args and 'list' in args:
+            return [{'database_id': 'db', 'name': 'Test wiki', 'role': 'writer', 'status': 'active'}]
         if 'database' in args:
             return {'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
         if 'status' in args:
@@ -104,6 +106,64 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(p.initialize(self.root, 'db', '/Knowledge/tests', run=self.fake)['version'], 2)
         with self.assertRaises(p.ProjectError):
             p.initialize(self.root, 'different', '/Knowledge/tests', run=self.fake)
+
+    def setup_root(self):
+        root = self.root / 'new-project'
+        root.mkdir()
+        (root / '.git').mkdir()
+        return root
+
+    def discovery_transport(self, linked=None, databases=()):
+        def run(args):
+            if 'database' in args and 'current' in args:
+                return {'database_id': linked, 'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
+            if 'database' in args and 'list' in args:
+                return list(databases)
+            return self.fake(args)
+        return run
+
+    def test_init_uses_linked_database_and_automatic_project_scope(self):
+        root = self.setup_root()
+        config = p.initialize(root, run=self.discovery_transport(linked='db-linked'))
+        self.assertEqual(config['database_id'], 'db-linked')
+        self.assertTrue(config['scope'].startswith('/Knowledge/projects/new-project-'))
+        self.assertTrue(any('status' in args and 'db-linked' in args for args in self.fake.calls))
+
+    def test_init_selects_only_active_writable_database(self):
+        root = self.setup_root()
+        databases = [
+            {'database_id': 'db-readable', 'name': 'Read only', 'role': 'reader', 'status': 'active'},
+            {'database_id': 'db-suspended', 'name': 'Suspended', 'role': 'owner', 'status': 'active', 'cycles_suspended_at_ms': 1},
+            {'database_id': 'db-writable', 'name': 'Memo', 'role': 'writer', 'status': 'active'}]
+        config = p.initialize(root, run=self.discovery_transport(databases=databases))
+        self.assertEqual(config['database_id'], 'db-writable')
+
+    def test_inspect_shows_named_choices_without_saving_or_creating_pages(self):
+        root = self.setup_root()
+        databases = [{'database_id': 'db-a', 'name': 'Memo', 'role': 'writer', 'status': 'active'},
+                     {'database_id': 'db-b', 'name': 'Work', 'role': 'owner', 'status': 'active'}]
+        run = self.discovery_transport(databases=databases)
+        before = list(root.iterdir())
+        proposal = p.initialize(root, inspect=True, run=run)
+        self.assertTrue(proposal['selection_required'])
+        self.assertEqual([item['name'] for item in proposal['database_candidates']], ['Memo', 'Work'])
+        self.assertEqual(list(root.iterdir()), before)
+        with self.assertRaisesRegex(p.ProjectError, 'Memo'):
+            p.initialize(root, run=run)
+        self.assertFalse((root / '.kinic-superpowers.json').exists())
+        self.assertFalse(any('write-node' in args or 'mkdir-node' in args for args in self.fake.calls))
+
+    def test_init_omitted_arguments_reuse_saved_settings(self):
+        config = p.initialize(self.root, run=self.fake)
+        self.assertEqual(config, self.project.config)
+
+    def test_inspecting_existing_config_never_repairs_or_migrates_it(self):
+        before = {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        proposal = p.initialize(self.root, inspect=True, run=self.fake)
+        self.assertEqual(proposal['database_id'], 'db')
+        self.assertEqual(proposal['database_name'], 'Test wiki')
+        after = {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
+        self.assertEqual(before, after)
 
     def test_auth_failure_never_means_missing(self):
         def fail(args):

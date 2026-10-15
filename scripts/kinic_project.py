@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import shutil
 import subprocess
 import tempfile
@@ -147,18 +148,36 @@ def _validate_connection(config):
         raise ProjectError('configured allow_non_ii_identity must be a boolean')
 
 
-def initialize(cwd, database_id, scope, cli_path='kinic-vfs-cli',
+def _default_scope(root):
+    slug = re.sub(r'[^a-z0-9._-]+', '-', root.name.lower()).strip('.-_')[:64] or 'project'
+    return f'/Knowledge/projects/{slug}-{_hash(str(root.resolve()))[:10]}'
+
+
+def _database_name(databases, database_id):
+    if not isinstance(databases, list):
+        raise ProjectError('invalid database list response')
+    for item in databases:
+        if isinstance(item, dict) and item.get('database_id') == database_id:
+            return item.get('name') or (item.get('metadata') or {}).get('name')
+    return None
+
+
+def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
                allow_non_ii_identity=False, canister_id=None, replica_host=None, run=None,
-               migrate=False, config_path=None):
+               migrate=False, config_path=None, inspect=False):
     root, target = discover(cwd, config_path)
     legacy = None
+    old = _read(target) if target.exists() else None
+    if database_id is None and old:
+        database_id = old.get('database_id')
+    if scope is None:
+        scope = (old or {}).get('scope') or _default_scope(target.parent)
     _path(scope)
-    if not database_id or not isinstance(database_id, str):
-        raise ProjectError('database_id is required')
-    if target.exists():
-        old = _read(target)
+    if database_id is not None and (not isinstance(database_id, str) or not database_id.strip()):
+        raise ProjectError('database_id must be a nonempty string')
+    if old is not None:
         if old.get('version') == 1:
-            if not migrate:
+            if not migrate and not inspect:
                 raise ProjectError('version 1 configuration retained; migrate explicitly before init')
             if old.get('database_id') != database_id:
                 raise ProjectError('migration database must match version 1 configuration')
@@ -170,6 +189,9 @@ def initialize(cwd, database_id, scope, cli_path='kinic-vfs-cli',
         if not legacy:
             project = Project(root, target, run=run)
             project._validate_identity()
+            if inspect:
+                name = _database_name(project.transport(['database', 'list', '--json']), database_id)
+                return {**old, 'database_name': name, 'selection_required': False, 'database_candidates': []}
             _ensure_ignored(root, target)
             if old.get('legacy_workflow_id'):
                 project._migrate_legacy()
@@ -181,7 +203,9 @@ def initialize(cwd, database_id, scope, cli_path='kinic-vfs-cli',
         # shell's cwd before transport changes cwd to the selected checkout.
         executable = str(Path(executable).resolve())
     invoke = run if run is not None else lambda args: _invoke(executable, root, args)
-    args = ['--database-id', database_id, '--identity-mode', 'identity']
+    args = ['--identity-mode', 'identity']
+    if database_id:
+        args += ['--database-id', database_id]
     if canister_id:
         args += ['--canister-id', canister_id]
     if replica_host:
@@ -193,13 +217,46 @@ def initialize(cwd, database_id, scope, cli_path='kinic-vfs-cli',
     if not isinstance(principal, str) or not principal or principal == '2vxsx-fae':
         raise ProjectError('authenticated identity principal required')
     connection = invoke([*args, 'database', 'current', '--json'])
-    # Authenticated read proves access before persisting configuration.
-    invoke([*args, 'status', '--json'])
+    candidates = []
+    if database_id is None:
+        database_id = connection.get('database_id')
+        if database_id is None:
+            databases = invoke([*args, 'database', 'list', '--json'])
+            if not isinstance(databases, list):
+                raise ProjectError('invalid database list response')
+            for item in databases:
+                if (isinstance(item, dict) and item.get('status') == 'active'
+                        and item.get('role') in ('owner', 'writer')
+                        and item.get('cycles_suspended_at_ms') is None
+                        and item.get('deleted_at_ms') is None
+                        and isinstance(item.get('database_id'), str) and item['database_id']):
+                    candidates.append({'database_id': item['database_id'],
+                                       'name': item.get('name') or (item.get('metadata') or {}).get('name') or item['database_id'],
+                                       'role': item['role']})
+            if len(candidates) == 1:
+                database_id = candidates[0]['database_id']
     config = dict(version=2, database_id=database_id, scope=scope, cli=executable,
                   canister_id=canister_id or connection.get('canister_id'),
                   replica_host=replica_host or connection.get('replica_host'),
                   identity={'principal': principal, 'allow_non_ii_identity': bool(allow_non_ii_identity)})
+    if database_id is None:
+        if inspect:
+            return {**config, 'selection_required': True, 'database_candidates': candidates}
+        choices = ', '.join(f'{item["name"]} ({item["database_id"]})' for item in candidates)
+        raise ProjectError('database selection required; run init --inspect and select a database by name: '
+                           + (choices or 'no active writable databases found'))
     _validate_connection(config)
+    # Pin the inspected endpoint for the authenticated access check.
+    verify_args = ['--database-id', database_id, '--identity-mode', 'identity',
+                   '--canister-id', config['canister_id'], '--replica-host', config['replica_host']]
+    if allow_non_ii_identity:
+        verify_args += ['--allow-non-ii-identity']
+    invoke([*verify_args, 'status', '--json'])
+    if inspect:
+        inventory = candidates or invoke([*args, 'database', 'list', '--json'])
+        return {**config, 'database_name': _database_name(inventory, database_id),
+                'selection_required': False, 'database_candidates': candidates,
+                'migration_required': legacy is not None}
     _ensure_ignored(root, target)
     if legacy:
         backup = target.with_name(target.name + '.v1-backup')
