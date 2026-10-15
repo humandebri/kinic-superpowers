@@ -146,6 +146,152 @@ class WorkflowTests(unittest.TestCase):
             self.work.push('spec')
         self.assertEqual(self.work.status('spec')['etag'], 'v1')
 
+    def workspace_files(self):
+        return {str(path.relative_to(self.root)): (path.read_bytes(), path.stat().st_mtime_ns)
+                for path in self.root.rglob('*') if path.is_file()}
+
+    def test_check_reports_freshness_without_changing_files_or_remote(self):
+        self.work.pull('spec')
+        for local_content, remote_etag, expected in [
+                ('approved spec', 'v1', 'clean'),
+                ('my changes', 'v1', 'local_changed'),
+                ('approved spec', 'v9', 'remote_changed'),
+                ('my changes', 'v9', 'conflict')]:
+            with self.subTest(state=expected):
+                self.local().write_text(local_content)
+                self.cli.node.update(content='remote content', etag=remote_etag)
+                before = self.workspace_files()
+                remote = dict(self.cli.node)
+                count = len(self.cli.calls)
+                result = self.work.check('spec')
+                self.assertEqual(result['state'], expected)
+                self.assertTrue(result['remote_checked'])
+                self.assertEqual(result['etag'], 'v1')
+                self.assertEqual(result['remote_etag'], remote_etag)
+                self.assertEqual(result['dirty'], local_content != 'approved spec')
+                self.assertEqual(self.workspace_files(), before)
+                self.assertEqual(self.cli.node, remote)
+                self.assertEqual(self.cli.calls[count:], [
+                    ['--database-id', 'db-test', 'read-node',
+                     '--path', '/Knowledge/work/spec.md', '--json']])
+
+    def test_check_without_baseline_is_untracked_with_or_without_local(self):
+        for content in [None, 'untracked work']:
+            with self.subTest(local_content=content):
+                if content is not None:
+                    self.local().parent.mkdir()
+                    self.local().write_text(content)
+                before = self.workspace_files()
+                result = self.work.check('spec')
+                self.assertEqual(result['state'], 'untracked')
+                self.assertIsNone(result['etag'])
+                self.assertIsNone(result['dirty'])
+                self.assertTrue(result['remote_checked'])
+                self.assertEqual(self.workspace_files(), before)
+                self.assertFalse((self.root / '.superpowers').exists())
+
+    def test_check_missing_local_preserves_baseline(self):
+        self.work.pull('spec')
+        self.local().unlink()
+        self.cli.node['etag'] = 'v9'
+        before = self.workspace_files()
+        result = self.work.check('spec')
+        self.assertEqual(result['state'], 'missing_local')
+        self.assertIsNone(result['dirty'])
+        self.assertTrue(result['remote_checked'])
+        self.assertEqual(self.workspace_files(), before)
+        self.assertFalse(self.local().exists())
+
+    def test_check_unknown_role_fails_before_transport(self):
+        with self.assertRaises(workflow.WorkflowError):
+            self.work.check('unknown')
+        self.assertEqual(self.cli.calls, [])
+
+    def test_check_rejects_malformed_remote_without_changing_files(self):
+        self.work.pull('spec')
+        before = self.workspace_files()
+        valid = dict(self.cli.node)
+        malformed = [None, [], {}, *[
+            {**valid, field: value} for field, values in [
+                ('path', ['/wrong', None]), ('kind', ['directory', None]),
+                ('content', [None, 42]), ('etag', ['', None, 42]),
+                ('metadata_json', [None, {}])]
+            for value in values]]
+        for node in malformed:
+            with self.subTest(node=node):
+                self.work.run = lambda args: node
+                with self.assertRaises(workflow.WorkflowError):
+                    self.work.check('spec')
+                self.assertEqual(self.workspace_files(), before)
+                self.assertFalse(self.work.status('spec')['remote_checked'])
+
+    def test_check_transport_failure_preserves_local_and_baseline(self):
+        self.work.pull('spec')
+        self.local().write_text('unpublished')
+        before = self.workspace_files()
+
+        def offline(args):
+            raise workflow.WorkflowError('offline')
+
+        self.work.run = offline
+        with self.assertRaisesRegex(workflow.WorkflowError, 'offline'):
+            self.work.check('spec')
+        self.assertEqual(self.workspace_files(), before)
+        self.assertFalse(self.work.status('spec')['remote_checked'])
+
+    def test_check_cli_selects_role_and_aggregates_all_roles(self):
+        self.work.pull('spec')
+        cfg = json.loads(self.config.read_text())
+        cfg['artifacts']['plan'] = {'path': '/Knowledge/work/plan.md', 'local': 'docs/plan.md'}
+        self.config.write_text(json.dumps(cfg))
+        fake = self.root / 'fake check cli'
+        fake.write_text('''#!/usr/bin/env python3
+import json, sys
+from pathlib import Path
+args = sys.argv[1:]
+if 'read-node' not in args:
+    sys.exit(3)
+path = args[args.index('--path') + 1]
+nodes = json.loads(Path(__file__).with_name('server.json').read_text())
+print(json.dumps(nodes[path]))
+''')
+        fake.chmod(0o700)
+        state = self.root / 'server.json'
+        plan = {**self.cli.node, 'path': '/Knowledge/work/plan.md'}
+        nodes = {self.cli.node['path']: self.cli.node, plan['path']: plan}
+        state.write_text(json.dumps(nodes))
+        command = ['python3', str(SCRIPT), '--config', str(self.config), '--cli', str(fake)]
+
+        def invoke(*args):
+            return subprocess.run([*command, *args], capture_output=True, text=True, check=False)
+
+        selected = invoke('check', 'spec')
+        self.assertEqual(selected.returncode, 0, selected.stderr)
+        self.assertEqual([json.loads(line)['state'] for line in selected.stdout.splitlines()], ['clean'])
+        batch = invoke('check')
+        self.assertEqual(batch.returncode, 1, batch.stderr)
+        self.assertEqual([(row['role'], row['state']) for row in map(json.loads, batch.stdout.splitlines())],
+                         [('spec', 'clean'), ('plan', 'untracked')])
+        self.assertEqual(invoke('pull', 'plan').returncode, 0)
+        self.assertEqual(invoke('check').returncode, 0)
+        nodes[plan['path']]['etag'] = 'remote-v2'
+        state.write_text(json.dumps(nodes))
+        changed = invoke('check')
+        self.assertEqual(changed.returncode, 1)
+        self.assertEqual([json.loads(line)['state'] for line in changed.stdout.splitlines()],
+                         ['clean', 'remote_changed'])
+        nodes[plan['path']]['etag'] = ''
+        state.write_text(json.dumps(nodes))
+        failed = invoke('check', 'plan')
+        self.assertEqual(failed.returncode, 1)
+        self.assertEqual(failed.stdout, '')
+        self.assertIn('kinic-workflow:', failed.stderr)
+        fake.unlink()
+        unknown = invoke('check', 'unknown')
+        self.assertEqual(unknown.returncode, 1)
+        self.assertIn('unknown artifact', unknown.stderr)
+        self.assertNotIn('could not finish', unknown.stderr)
+
     def test_real_subprocess_transport_round_trip(self):
         fake = self.root / 'fake cli'
         state = self.root / 'server.json'

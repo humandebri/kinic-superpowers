@@ -126,14 +126,7 @@ class Workspace:
             baseline = self.snapshot(cache)
             if digest(local.read_text(encoding='utf-8')) != baseline['sha256']:
                 raise WorkflowError('unpublished local changes; preserve and reconcile before pulling')
-        node = self.run(['--database-id', self.database, 'read-node',
-                         '--path', item['path'], '--json'])
-        if (not isinstance(node, dict) or node.get('path') != item['path'] or
-                node.get('kind') != 'file' or
-                not isinstance(node.get('content'), str) or
-                not isinstance(node.get('etag'), str) or not node['etag'] or
-                not isinstance(node.get('metadata_json'), str)):
-            raise WorkflowError('expected a file node with matching path, content, etag and metadata_json')
+        node = self.read_node(item)
         atomic_write(local, node['content'])
         atomic_write(cache, json.dumps({
             'etag': node['etag'], 'sha256': digest(node['content']),
@@ -172,6 +165,32 @@ class Workspace:
         }))
         return {**self.status(role), 'remote_checked': True}
 
+    def read_node(self, item):
+        node = self.run(['--database-id', self.database, 'read-node',
+                         '--path', item['path'], '--json'])
+        if (not isinstance(node, dict) or node.get('path') != item['path'] or
+                node.get('kind') != 'file' or
+                not isinstance(node.get('content'), str) or
+                not isinstance(node.get('etag'), str) or not node['etag'] or
+                not isinstance(node.get('metadata_json'), str)):
+            raise WorkflowError('expected a file node with matching path, content, etag and metadata_json')
+        return node
+
+    def check(self, role):
+        item, _, _ = self.artifact(role)
+        result = self.status(role)
+        node = self.read_node(item)
+        if result['etag'] is None:
+            state = 'untracked'
+        elif result['dirty'] is None:
+            state = 'missing_local'
+        elif node['etag'] != result['etag']:
+            state = 'conflict' if result['dirty'] else 'remote_changed'
+        else:
+            state = 'local_changed' if result['dirty'] else 'clean'
+        return {**result, 'state': state, 'remote_etag': node['etag'],
+                'remote_checked': True}
+
     def status(self, role):
         item, local, cache = self.artifact(role)
         baseline = self.snapshot(cache) if cache.exists() else None
@@ -190,23 +209,27 @@ def main():
     parser.add_argument('--cli', default='kinic-vfs-cli', help='Kinic CLI executable path')
     parser.add_argument('--allow-non-ii-identity', action='store_true',
                         help='Explicitly use the selected local icp-cli identity')
-    parser.add_argument('command', choices=['pull', 'push', 'status'])
+    parser.add_argument('command', choices=['pull', 'push', 'status', 'check'])
     parser.add_argument('role', nargs='?')
     args = parser.parse_args()
     try:
         transport = CLI(args.cli, cwd=Path(args.config).resolve().parent,
                         allow_non_ii_identity=args.allow_non_ii_identity)
         work = Workspace(args.config, transport)
-        if args.command != 'status' and args.role is None:
+        if args.command in ('pull', 'push') and args.role is None:
             raise WorkflowError('pull/push require one artifact role')
         roles = [args.role] if args.role is not None else list(work.artifacts)
-        # One remote mutation per invocation; no partially successful batches.
+        # Pull and push require a role; check and status can read all roles.
+        exit_code = 0
         for role in roles:
-            print(json.dumps(getattr(work, args.command)(role), ensure_ascii=False))
+            result = getattr(work, args.command)(role)
+            print(json.dumps(result, ensure_ascii=False))
+            if args.command == 'check' and result['state'] != 'clean':
+                exit_code = 1
     except (WorkflowError, OSError, ValueError, KeyError, TypeError) as exc:
         print(f'kinic-workflow: {exc}', file=sys.stderr)
         return 1
-    return 0
+    return exit_code
 
 
 if __name__ == '__main__':

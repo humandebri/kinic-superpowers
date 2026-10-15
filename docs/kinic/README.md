@@ -32,12 +32,21 @@ It is a document bridge pilot, not a task scheduler or an execution service.
 
 ```bash
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --config "$PROJECT_ROOT/.kinic-superpowers.json" status
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --config "$PROJECT_ROOT/.kinic-superpowers.json" check spec
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --config "$PROJECT_ROOT/.kinic-superpowers.json" pull spec
 # Edit the configured local working copy after reading it.
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --config "$PROJECT_ROOT/.kinic-superpowers.json" push spec
 ```
 
 `status` reports local baselines and dirty copies; it does not check the remote.
+`check ROLE` reads the remote and compares its revision to the baseline and
+local file without updating any document or snapshot. Omit ROLE to check all
+configured artifacts. Each JSON record has a `state`: `clean`, `local_changed`,
+`remote_changed`, `conflict` (both changed), `untracked` (no baseline) or
+`missing_local`. Exit 0 means all requested artifacts are clean; exit 1 means
+changes, missing state or a read failure. A read failure is an error, never
+evidence of freshness. This is the preferred first check when inspecting a
+working copy without changing it; pull is still needed to refresh stale content.
 `pull` reads the current remote node and records its etag and content hash under
 `.superpowers/kinic/`. It refuses to overwrite an existing file without a baseline
 or with unpublished changes. Existing user documents must be preserved elsewhere
@@ -52,7 +61,7 @@ An unchanged `push` reads the remote etag instead of writing and fails if it
 differs from the baseline; it is not a silent local success.
 
 If the CLI is not on PATH, pass `--cli /absolute/path/to/kinic-vfs-cli` before
-`pull`, `push` or `status`. With human authorization to use the selected local
+`pull`, `push`, `check` or `status`. With human authorization to use the selected local
 icp-cli identity, also pass `--allow-non-ii-identity`. Without that explicit flag,
 the bridge retains the CLI's default identity policy.
 
@@ -102,7 +111,10 @@ See `live-check-2026-10-15.json` for artifact revisions and checks.
 
 The CLI reports a Candid error-code decoding failure for `EtagConflict`; the
 server rejection and preserved winning content were verified independently.
-The adapter stops on this failure. Fixing the CLI diagnostic remains separate.
+The adapter stops on this failure. The sibling CLI has now been repaired and
+rebuilt; repeating the live stale write displays the server's readable reason.
+See `cli-error-fix-2026-10-15.md` for the fix and focused Rust checks. The original
+live-check report retains its original diagnostic as historical evidence.
 An earlier attempt failed before page creation because the parent folder did
 not exist. Bootstrap now creates the unique run folder first.
 
