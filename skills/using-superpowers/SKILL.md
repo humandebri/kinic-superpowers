@@ -3,6 +3,11 @@ name: using-superpowers
 description: Use when starting any conversation - establishes how to find and use skills, requiring skill invocation before ANY response including clarifying questions
 ---
 
+## Kinic Wiki integration
+
+Before choosing a workflow, check the development project root for `.kinic-superpowers.json`. If present, read `references/kinic-workflow.md` and apply it throughout the session, including after compaction. Pass its source-of-truth rules to subagents; the subagent stop below does not waive task-specific wiki obligations.
+
+
 <SUBAGENT-STOP>
 If you were dispatched as a subagent to execute a specific task, ignore this skill.
 </SUBAGENT-STOP>

@@ -3,6 +3,11 @@ name: finishing-a-development-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
 ---
 
+## Kinic Wiki integration
+
+With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Pull/read all five roles and validate approvals, reviewed HEAD and test evidence. Record completion and any created PR URL in completion, push it, then push its etag/reference in progress before cleanup. Sync failure blocks completion and workspace removal. Existing human authorization requirements for merge/push remain in force.
+
+
 # Finishing a Development Branch
 
 ## Overview

@@ -3,6 +3,11 @@ name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
+## Kinic Wiki integration
+
+With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Follow its Writing plans contract: pull spec/plan/progress, verify spec approval, write the configured plan with the spec etag, and push it before review. Record actual plan approval against its wiki etag. Use the configured local plan path instead of the default path below.
+
+
 # Writing Plans
 
 ## Overview

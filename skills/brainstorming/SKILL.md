@@ -3,6 +3,11 @@ name: brainstorming
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, modifying behavior, or planning anything new, in software or out of it (a talk, a business, a renovation)."
 ---
 
+## Kinic Wiki integration
+
+With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Follow its Brainstorming contract: pull the configured spec/progress, write the design to the configured working copy, push it, and bind human approval to its acknowledged wiki etag. These paths and handoff rules replace the local-only design path below.
+
+
 # Brainstorming
 
 You are very good at building. You build what you believe your human

@@ -3,6 +3,11 @@ name: subagent-driven-development
 description: Use when executing implementation plans with independent tasks in the current session
 ---
 
+## Kinic Wiki integration
+
+With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Pull and read spec/plan/progress before setup and every resume; validate approvals before dispatch. Match the configured progress path to sdd-workspace. The controller pushes progress after every task, including rulings and verification, before the next dispatch. Pass source revisions to subagents; they do not share write ownership. Sync required evidence before cleanup; a conflict stops dispatch.
+
+
 # Subagent-Driven Development
 
 Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.

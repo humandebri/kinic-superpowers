@@ -1,5 +1,11 @@
 # Superpowers
 
+> **Kinic Wiki integration fork (pilot):** This checkout adds wiki-backed design,
+> plan, progress, review and completion working copies to the upstream skills.
+> Start with [Kinic setup and limitations](docs/kinic/README.md) and
+> [project intent](PROJECT.md). The original Superpowers documentation follows.
+> No global plugin installation is performed by this checkout.
+
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
 ## Table of Contents

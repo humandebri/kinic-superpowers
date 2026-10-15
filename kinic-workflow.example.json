@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "database_id": "REPLACE_WITH_DATABASE_ID",
+  "artifacts": {
+    "spec": {
+      "path": "/Knowledge/projects/example/spec.md",
+      "local": "docs/superpowers/specs/example-design.md"
+    },
+    "plan": {
+      "path": "/Knowledge/projects/example/plan.md",
+      "local": "docs/superpowers/plans/example.md"
+    },
+    "progress": {
+      "path": "/Knowledge/projects/example/progress.md",
+      "local": ".superpowers/sdd/example/progress.md"
+    },
+    "review": {
+      "path": "/Knowledge/projects/example/review.md",
+      "local": "docs/superpowers/reviews/example.md"
+    },
+    "completion": {
+      "path": "/Knowledge/projects/example/completion.md",
+      "local": "docs/superpowers/completions/example.md"
+    }
+  }
+}

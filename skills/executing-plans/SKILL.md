@@ -3,6 +3,11 @@ name: executing-plans
 description: Use when executing an implementation plan in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available
 ---
 
+## Kinic Wiki integration
+
+With `.kinic-superpowers.json` in the project root, first read `../using-superpowers/references/kinic-workflow.md`. Pull and read spec/plan/progress before setup and every resume; validate approvals before implementation. The local ledger is a working copy, not authority. Match its path to sdd-workspace, push progress after each task helper/completion, and stop dispatch on sync failure. Preserve required evidence and sync before the cleanup below.
+
+
 # Executing Plans
 
 Execute the plan yourself, task by task, in this session: no implementer

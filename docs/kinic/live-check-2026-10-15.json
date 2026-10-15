@@ -1,0 +1,101 @@
+{
+  "database_id": "db_ceifht7sc2lh",
+  "prefix": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e",
+  "run_id": "d5c15c8572e24a189d40939ea15a4e7e",
+  "checks": [
+    {
+      "check": "create:spec",
+      "passed": true,
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/spec.md",
+      "etag": "v4h:e845cb98bfc2f535ca49bfdd85b1f4c50ffe426e72076ab0443432accf821a02"
+    },
+    {
+      "check": "create:plan",
+      "passed": true,
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/plan.md",
+      "etag": "v4h:4ae8c62627f62a9d73081bdbbe76af2b01dc9708f8c0e454ad3786b0a2b13005"
+    },
+    {
+      "check": "create:progress",
+      "passed": true,
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+      "etag": "v4h:ec8afeb90d52c2d45a5cd9b206ab82e0d68b06893927ab983e9d32b75e30812d"
+    },
+    {
+      "check": "create:review",
+      "passed": true,
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/review.md",
+      "etag": "v4h:9e8b34eb01e10a1936dd9398277f7a525b92e76c679977fe8f88bd0655b6423c"
+    },
+    {
+      "check": "create:completion",
+      "passed": true,
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/completion.md",
+      "etag": "v4h:039ffffe9dacdcb7aa2d13869881255eaf71173f810d37876e8953badfa9e8ae"
+    },
+    {
+      "check": "round-trip-and-resume:spec",
+      "passed": true,
+      "etag": "v4h:25178e98b124e74dd1eefd4f1de15f442cbcb138bfabe4b0e7798c2e3107b9cb"
+    },
+    {
+      "check": "round-trip-and-resume:plan",
+      "passed": true,
+      "etag": "v4h:867c4697ceb4036add50adce00a7ed6828b570e9ce4ef67475a6e0acb4989e6e"
+    },
+    {
+      "check": "round-trip-and-resume:progress",
+      "passed": true,
+      "etag": "v4h:ec1c518fddcab80586ceca47e291978d1395ad977134c9007617699604b2a2a6"
+    },
+    {
+      "check": "round-trip-and-resume:review",
+      "passed": true,
+      "etag": "v4h:1b3f238dcd238e6c864731ab6b6cffbdb96b4df3d7bb0e4edc4c0fe4d11d0113"
+    },
+    {
+      "check": "round-trip-and-resume:completion",
+      "passed": true,
+      "etag": "v4h:f109aa9d5ded1a29e7e18ffe54a907cc21432045d4c749461b1af9524f9e6b01"
+    },
+    {
+      "check": "stale-write-rejected",
+      "passed": true,
+      "error": "2: Deserialize error: unknown variant `EtagConflict`, expected one of `etag_conflict`, `not_found`, `forbidden`, `write_unavailable`, `invalid_operation`"
+    },
+    {
+      "check": "winning-content-preserved",
+      "passed": true,
+      "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031"
+    },
+    {
+      "check": "dirty-copy-preserved",
+      "passed": true
+    }
+  ],
+  "status": "passed",
+  "final_artifacts": {
+    "spec": {
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/spec.md",
+      "etag": "v4h:25178e98b124e74dd1eefd4f1de15f442cbcb138bfabe4b0e7798c2e3107b9cb"
+    },
+    "plan": {
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/plan.md",
+      "etag": "v4h:867c4697ceb4036add50adce00a7ed6828b570e9ce4ef67475a6e0acb4989e6e"
+    },
+    "progress": {
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/progress.md",
+      "etag": "v4h:d1ccf59deae7cad0de300cc0c3025a2d311df358a8c42289f3771f149f267031"
+    },
+    "review": {
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/review.md",
+      "etag": "v4h:1b3f238dcd238e6c864731ab6b6cffbdb96b4df3d7bb0e4edc4c0fe4d11d0113"
+    },
+    "completion": {
+      "path": "/Knowledge/kinic-superpowers/live-check-d5c15c8572e24a189d40939ea15a4e7e/completion.md",
+      "etag": "v4h:f109aa9d5ded1a29e7e18ffe54a907cc21432045d4c749461b1af9524f9e6b01"
+    }
+  },
+  "cli_diagnostic_issue": "Server EtagConflict is rejected but CLI cannot deserialize PascalCase error code. No blind retry performed.",
+  "date_jst": "2026-10-15"
+}
