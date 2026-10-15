@@ -219,10 +219,19 @@ def main():
         if args.command in ('pull', 'push') and args.role is None:
             raise WorkflowError('pull/push require one artifact role')
         roles = [args.role] if args.role is not None else list(work.artifacts)
+        # Reject selection mistakes before doing any transport work.
+        for role in roles:
+            work.artifact(role)
         # Pull and push require a role; check and status can read all roles.
         exit_code = 0
         for role in roles:
-            result = getattr(work, args.command)(role)
+            try:
+                result = getattr(work, args.command)(role)
+            except (WorkflowError, OSError, ValueError, KeyError, TypeError) as exc:
+                if args.command != 'check':
+                    raise
+                result = {'role': role, 'state': 'error',
+                          'remote_checked': False, 'error': str(exc)}
             print(json.dumps(result, ensure_ascii=False))
             if args.command == 'check' and result['state'] != 'clean':
                 exit_code = 1

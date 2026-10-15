@@ -280,12 +280,25 @@ print(json.dumps(nodes[path]))
         self.assertEqual(changed.returncode, 1)
         self.assertEqual([json.loads(line)['state'] for line in changed.stdout.splitlines()],
                          ['clean', 'remote_changed'])
+        nodes[self.cli.node['path']]['etag'] = ''
+        nodes[plan['path']]['etag'] = 'v1'
+        state.write_text(json.dumps(nodes))
+        partial_failure = invoke('check')
+        self.assertEqual(partial_failure.returncode, 1)
+        rows = list(map(json.loads, partial_failure.stdout.splitlines()))
+        self.assertEqual([(row['role'], row['state']) for row in rows],
+                         [('spec', 'error'), ('plan', 'clean')])
+        self.assertFalse(rows[0]['remote_checked'])
+        self.assertIn('error', rows[0])
+        nodes[self.cli.node['path']]['etag'] = 'v1'
         nodes[plan['path']]['etag'] = ''
         state.write_text(json.dumps(nodes))
         failed = invoke('check', 'plan')
         self.assertEqual(failed.returncode, 1)
-        self.assertEqual(failed.stdout, '')
-        self.assertIn('kinic-workflow:', failed.stderr)
+        failed_row = json.loads(failed.stdout)
+        self.assertEqual(failed_row['state'], 'error')
+        self.assertFalse(failed_row['remote_checked'])
+        self.assertIn('matching path', failed_row['error'])
         fake.unlink()
         unknown = invoke('check', 'unknown')
         self.assertEqual(unknown.returncode, 1)
