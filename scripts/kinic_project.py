@@ -428,12 +428,18 @@ class Project:
         transport = 'unknown'
         required = ('identity', 'database.caller', 'database.read', 'api.read_node')
         try:
-            effective = self._run([*_auth_args(self.config), 'database', 'current', '--json'])
-            if any(effective.get(key) != self.config.get(key) for key in CONNECTION_KEYS):
-                transport = 'error'
-                raise ProjectError('effective CLI connection differs from project binding')
+            if self.version == 3:
+                effective = self._run([*_auth_args(self.config), 'database', 'current', '--json'])
+                if any(effective.get(key) != self.config.get(key) for key in CONNECTION_KEYS):
+                    transport = 'error'
+                    raise ProjectError('effective CLI connection differs from project binding')
+                diagnostic_args = _connection_args(effective, self.config)
+            else:
+                # Legacy operations use saved pins until explicit migration.
+                # Diagnose that same destination, even without a common link.
+                diagnostic_args = self._args()
             checks.append({'id': 'adapter.binding', 'status': 'ok', 'required': True})
-            native = self._run([*_connection_args(effective, self.config), 'agent', 'doctor', '--json'])
+            native = self._run([*diagnostic_args, 'agent', 'doctor', '--json'])
             native_checks = native.get('checks')
             if not isinstance(native_checks, list):
                 raise ProjectError('invalid agent doctor response')

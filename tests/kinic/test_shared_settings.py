@@ -191,3 +191,25 @@ class SharedSettingsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(json.loads(result.stdout)['status'], 'error')
         self.assertEqual(self.snapshot(), before)
+
+    def test_legacy_doctor_uses_saved_transport_when_common_database_is_unset(self):
+        saved = self.init()
+        for version in (1, 2):
+            with self.subTest(version=version):
+                legacy = dict(saved, version=version)
+                if version == 1:
+                    legacy = {'version': 1, 'database_id': 'db', 'artifacts': {}}
+                self.path.write_text(json.dumps(legacy))
+                self.cli.connection['database_id'] = None
+                self.cli.calls.clear()
+                before = self.snapshot()
+                result = p.Project(self.root, run=self.cli).doctor()
+                self.assertEqual(result['document_transport'], 'ok')
+                self.assertEqual(result['status'], 'unknown')
+                call = next(c for c in self.cli.calls if 'doctor' in c)
+                self.assertEqual(call[call.index('--database-id') + 1], 'db')
+                if version == 2:
+                    self.assertEqual(call[call.index('--canister-id') + 1], 'canister')
+                    self.assertEqual(call[call.index('--replica-host') + 1], 'https://icp-api.io')
+                self.assertFalse(any('show' in c or 'status' in c or 'link' in c for c in self.cli.calls))
+                self.assertEqual(self.snapshot(), before)
