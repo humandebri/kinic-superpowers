@@ -25,6 +25,18 @@ project name; `init` saves the verified connection. `project register` registers
 the repository in the Wiki. No secret keys or tokens are stored. Keep authorized
 identity pinned; a mismatch stops access, never switches identities.
 
+Version 3 uses the CLI's `.kinic/config.toml` resolution and native precedence.
+The endpoint fields in `.kinic-superpowers.json` are a binding snapshot: they do
+not override changed environment or CLI settings. Each remote operation resolves
+without those pins, compares the binding and identity, then pins the checked
+transport. Worktrees resolve common settings in the primary checkout while
+keeping their own document copies and chat bindings. Use `init --migrate` for an
+explicit v1/v2 migration; backups and unchanged fingerprints preserve recovery.
+`init --inspect` never performs migration. `doctor --json` provides read-only
+configuration, binding and local session diagnostics. Unknown is unverified;
+optional learning API/plugin findings do not block ordinary document access.
+
+
 For a case needing durable documents, `workflow list` lists registered cases.
 Use the user's intended case with `workflow use ID`. For a requested new case,
 `workflow new --title TITLE` registers it without creating document placeholders.

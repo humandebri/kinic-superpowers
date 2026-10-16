@@ -8,6 +8,7 @@ Codex chat. Source editing, test execution and Git operations run locally.
 ## Prerequisites and setup
 
 - Python 3.9+ and an installed, authenticated `kinic-vfs-cli` supporting
+  `database current --json`, TOML-preserving `database link`, `agent doctor --json`,
   `read-node --json` and `write-node --expected-etag --json`.
 - The adapter discovers the saved/CLI-linked or sole active writable database.
   With multiple candidates, choose a database by name in chat. The adapter
@@ -28,7 +29,12 @@ python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" project register
 
 If necessary, provide `--cli /absolute/path/to/kinic-vfs-cli` and a human-authorized
 `--allow-non-ii-identity` at initialization. The adapter saves the CLI location,
-endpoint and exact principal in Git-ignored `.kinic-superpowers.json`. Explicit
+scope, exact authorized principal and an endpoint binding snapshot in Git-ignored
+`.kinic-superpowers.json` version 3. Common connection settings are saved by the
+CLI in `.kinic/config.toml`; its native precedence is authoritative. Before each
+remote operation the adapter resolves the effective connection without endpoint
+flags, rejects destination drift, checks the principal, then pins that checked
+connection for transport. Explicit
 CLI paths and relative PATH entries are resolved to an absolute path before
 saving, so they remain usable from another checkout. The adapter checks the
 active principal on access and stops on mismatch without switching identity.
@@ -46,6 +52,27 @@ main checkout and ignores it in Git there. Working copies,
 baselines, initialization journals and chat bindings stay in each checkout's
 ignored `.superpowers/` directory. Authored document working copies use upstream
 `docs/superpowers/specs/` and `docs/superpowers/plans/` paths. Do not copy these directories between worktrees.
+
+## Shared-settings migration and diagnostics
+
+Existing v1/v2 configurations remain readable. Explicitly run `init --migrate`
+to move to version 3; `init --inspect` leaves old settings untouched. Migration
+backs up the old adapter configuration to `.v1-backup` or `.v2-backup`, rejects
+conflicting common settings, and verifies CLI resolution after linking. It keeps
+the scope, project registration, authorized principal and CLI executable. An
+unchanged v2 connection/scope retains its fingerprint, cached manifests and
+session bindings. If linking succeeds but readback fails, reconcile overriding
+settings and retry; the original adapter file and backup remain available.
+
+Run `doctor --json` for read-only diagnostics. It calls native `agent doctor`
+and adds project configuration, destination binding and local session checks.
+`document_transport: ok` means the native authenticated document read checks
+succeeded; it does not establish the adapter's authorized principal because
+native doctor does not expose it. That check remains `unknown`, and the overall
+status/exit code reflects required unknown checks. Ordinary operations verify
+the principal separately. Optional learning APIs and plugin findings remain in
+the report with `required: false`; they never gate ordinary document transport.
+Doctor performs no setup, credential refresh, plugin installation or file writes.
 
 ## Commands
 

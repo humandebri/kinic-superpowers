@@ -32,6 +32,17 @@ class CodexHookTests(unittest.TestCase):
             self.assertEqual(data['hookSpecificOutput']['hookEventName'], 'SessionStart')
         return data.get('hookSpecificOutput', {}).get('additionalContext', '')
 
+    def test_v3_hook_is_local_and_preserves_session_selection(self):
+        path = self.config()
+        data = json.loads(path.read_text())
+        data['version'] = 3
+        path.write_text(json.dumps(data))
+        self.bind('chat-a')
+        before = {str(f): f.read_bytes() for f in self.project.rglob('*') if f.is_file()}
+        self.assertIn('bound to workflow', self.run_hook())
+        self.assertIn('No workflow selected', self.run_hook(session='other'))
+        self.assertEqual(before, {str(f): f.read_bytes() for f in self.project.rglob('*') if f.is_file()})
+
     def test_no_config_is_silent(self):
         self.assertEqual(self.run_hook(), '')
 

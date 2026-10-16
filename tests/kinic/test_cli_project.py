@@ -41,6 +41,13 @@ class DispatchTests(unittest.TestCase):
                 contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             return bridge.main(), out.getvalue(), err.getvalue()
 
+    def test_doctor_invalid_configuration_is_json_diagnostic(self):
+        self.module.Project.side_effect = self.module.ProjectError('invalid saved configuration')
+        code, out, err = self.invoke('doctor', '--json')
+        self.assertEqual(code, 1)
+        self.assertEqual(json.loads(out)['checks'][0]['id'], 'adapter.configuration')
+        self.assertEqual(err, '')
+
     def test_init_accepts_options_after_command(self):
         code, out, _ = self.invoke('init', '--database-id', 'db-test', '--scope', '/Knowledge/tests',
                                    '--cli', '/custom/kinic', '--allow-non-ii-identity')

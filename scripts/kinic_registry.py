@@ -85,8 +85,8 @@ def register(project, project_name=None):
 Existing namespaces must be migrated separately. No workflow fingerprints change
 on an idempotent registration. Connection config is saved only after verification.
 """
-    if project.config.get('version') != 2:
-        raise ProjectError('project registration requires version 2 connection configuration')
+    if project.config.get('version') not in (2, 3):
+        raise ProjectError('project registration requires version 2 or 3 connection configuration')
     proposal = propose(project.root)
     name = project_name or project.config.get('project_name') or proposal['project_name']
     if not isinstance(name, str) or name != _slug(name):

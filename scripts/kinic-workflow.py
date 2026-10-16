@@ -13,6 +13,8 @@ import subprocess
 import sys
 import tempfile
 
+# Diagnostics must not create bytecode caches in an installed plugin.
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kinic_workspace import execution_workspace, exclude_document_copy
 
@@ -234,6 +236,9 @@ def argument_parser():
     init.add_argument('--scope', help='Override the saved or automatically generated project scope')
     init.add_argument('--inspect', action='store_true', help='Discover setup settings and named database choices without saving')
     init.add_argument('--migrate', action='store_true', help='Import an existing v1 workflow')
+    doctor = commands.add_parser('doctor', help='Read-only shared CLI and project diagnostics')
+    connection_flags(doctor, inherited=True)
+    doctor.add_argument('--json', action='store_true', help='Emit JSON diagnostics (default)')
     project_cmd = commands.add_parser('project', help='Register repository identity in the Wiki')
     connection_flags(project_cmd, inherited=True)
     project_actions = project_cmd.add_subparsers(dest='action', required=True)
@@ -295,6 +300,10 @@ def main():
         project = Project(cwd=Path(args.project_root or Path.cwd()), config_path=args.config,
                           cli_override=args.cli,
                           allow_non_ii_identity=args.allow_non_ii_identity)
+        if args.command == 'doctor':
+            result = project.doctor(session=args.session)
+            print(json.dumps(result, ensure_ascii=False))
+            return 0 if result['status'] == 'ok' else 1
         if args.command == 'project':
             from kinic_registry import register
             print(json.dumps(register(project, args.name), ensure_ascii=False))
@@ -341,7 +350,7 @@ def main():
         if args.command in ('pull', 'push') and args.role is None:
             raise WorkflowError('pull/push require one artifact role')
         roles = [args.role] if args.role is not None else list(work.artifacts)
-        if args.role is not None and args.role not in work.artifacts and project.version == 2 and manifest['version'] == 2 and args.role in ('spec', 'plan', 'progress', 'review', 'completion'):
+        if args.role is not None and args.role not in work.artifacts and project.version in (2, 3) and manifest['version'] == 2 and args.role in ('spec', 'plan', 'progress', 'review', 'completion'):
             print(json.dumps({**workflow_context, 'role': args.role, 'state': 'not_created', 'remote_checked': False}))
             return 0 if args.command in ('status', 'check') else 1
         if not roles:
@@ -359,12 +368,17 @@ def main():
                     raise
                 result = {'role': role, 'state': 'error',
                           'remote_checked': False, 'error': str(exc)}
-            if project.version == 2 and args.command in ('pull', 'push'):
+            if project.version in (2, 3) and args.command in ('pull', 'push'):
                 project.cache_manifest(manifest)
             print(json.dumps({**workflow_context, **result}, ensure_ascii=False))
             if args.command == 'check' and result['state'] != 'clean':
                 exit_code = 1
     except (WorkflowError, ProjectError, OSError, ValueError, KeyError, TypeError) as exc:
+        if args.command == 'doctor':
+            print(json.dumps({'schema_version': 1, 'status': 'error', 'document_transport': 'unknown',
+                              'checks': [{'id': 'adapter.configuration', 'status': 'error',
+                                          'required': True, 'detail': str(exc)}]}))
+            return 1
         print(f'kinic-workflow: {exc}', file=sys.stderr)
         return 1
     return exit_code

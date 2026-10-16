@@ -19,6 +19,7 @@ class Fake:
         self.principal = 'principal-a'
         self.fail = None
         self.calls = []
+        self.linked_database = None
 
     def __call__(self, args):
         self.calls.append(args)
@@ -26,8 +27,11 @@ class Fake:
             return {'principal': self.principal}
         if 'database' in args and 'list' in args:
             return [{'database_id': 'db', 'name': 'Test wiki', 'role': 'writer', 'status': 'active'}]
+        if 'database' in args and 'link' in args:
+            self.linked_database = args[-1]
+            return {'path': '.kinic/config.toml'}
         if 'database' in args:
-            return {'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
+            return {'database_id': self.linked_database, 'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
         if 'status' in args:
             return {'ok': True}
         path = args[args.index('--path') + 1] if '--path' in args else None
@@ -122,7 +126,7 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(len(self.fake.calls), before)
 
     def test_init_idempotent_and_refuses_retarget(self):
-        self.assertEqual(p.initialize(self.root, 'db', '/Knowledge/tests', run=self.fake)['version'], 2)
+        self.assertEqual(p.initialize(self.root, 'db', '/Knowledge/tests', run=self.fake)['version'], 3)
         with self.assertRaises(p.ProjectError):
             p.initialize(self.root, 'different', '/Knowledge/tests', run=self.fake)
 
@@ -135,7 +139,7 @@ class ProjectTests(unittest.TestCase):
     def discovery_transport(self, linked=None, databases=()):
         def run(args):
             if 'database' in args and 'current' in args:
-                return {'database_id': linked, 'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
+                return {'database_id': self.fake.linked_database if self.fake.linked_database not in (None, 'db') else linked, 'canister_id': 'canister', 'replica_host': 'https://icp-api.io'}
             if 'database' in args and 'list' in args:
                 return list(databases)
             return self.fake(args)
@@ -195,7 +199,7 @@ class ProjectTests(unittest.TestCase):
 
     def test_saved_database_with_revoked_write_access_is_rejected_without_changes(self):
         before = {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()}
-        run = self.discovery_transport(databases=[
+        run = self.discovery_transport(linked='db', databases=[
             {'database_id': 'db', 'name': 'Test wiki', 'role': 'reader', 'status': 'active'}])
         for inspect in (True, False):
             with self.assertRaisesRegex(p.ProjectError, 'not writable'):
@@ -354,7 +358,7 @@ class ProjectTests(unittest.TestCase):
         executable = isolated / 'kinic'
         executable.write_text(f'#!{sys.executable}\nimport json, sys\n'
             'if "show" in sys.argv: print(json.dumps({"principal": "principal-a"}))\n'
-            'elif "current" in sys.argv: print(json.dumps({"canister_id": "canister", "replica_host": "https://example.invalid"}))\n'
+            'elif "current" in sys.argv: print(json.dumps({"database_id": "db", "canister_id": "canister", "replica_host": "https://example.invalid"}))\n'
             'elif "list" in sys.argv: print(json.dumps([{"database_id": "db", "name": "Test wiki", "role": "writer", "status": "active"}]))\n'
             'else: print("{}")\n')
         executable.chmod(0o755)

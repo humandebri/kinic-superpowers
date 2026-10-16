@@ -24,7 +24,7 @@ def context_for(payload):
     root = Path(root)
     try:
         config = json.loads(config_path.read_text())
-        if not isinstance(config, dict) or config.get('version', 1) not in (1, 2):
+        if not isinstance(config, dict) or config.get('version', 1) not in (1, 2, 3):
             raise ValueError('unsupported configuration version')
     except (ValueError, OSError) as error:
         return f'Kinic Superpowers configuration is invalid at {config_path}: {error}. Repair it before workflow operations; do not fall back to local-only work.'
