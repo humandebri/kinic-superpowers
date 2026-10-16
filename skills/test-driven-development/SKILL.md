@@ -3,9 +3,13 @@ name: test-driven-development
 description: "Use in a configured Kinic Superpowers project. Use when implementing any feature or bugfix, before writing implementation code"
 ---
 
+<!-- KINIC STORAGE START -->
+Apply this fork only in a configured Kinic project. Read
+`../using-superpowers/references/kinic-workflow.md` for Wiki storage and recovery.
+The upstream rules below determine task size, documents, approvals and reviews;
+the storage adapter does not add stages or require placeholder documents.
+<!-- KINIC STORAGE END -->
 # Test-Driven Development (TDD)
-
-Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

@@ -3,11 +3,12 @@ name: finishing-a-development-branch
 description: "Use in a configured Kinic Superpowers project. Use when implementation is complete, all tests pass, and you need to decide how to integrate the work"
 ---
 
-## Kinic Wiki integration
-
-First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
-
-
+<!-- KINIC STORAGE START -->
+Apply this fork only in a configured Kinic project. Read
+`../using-superpowers/references/kinic-workflow.md` for Wiki storage and recovery.
+The upstream rules below determine task size, documents, approvals and reviews;
+the storage adapter does not add stages or require placeholder documents.
+<!-- KINIC STORAGE END -->
 # Finishing a Development Branch
 
 ## Overview

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in live adapter check; creates five synthetic wiki pages and retains them.
+"""Opt-in live adapter check; creates synthetic pages under /Testing and removes verified fixtures.
 
 This tests document transport, not agent workflow execution or human approvals.
 """
@@ -23,6 +23,20 @@ def is_etag_conflict(message):
             'unknown variant `EtagConflict`' in message)
 
 
+def cleanup_fixture(cli, connection, prefix, expected):
+    if not prefix.startswith('/Testing/kinic-superpowers/') or '..' in Path(prefix).parts:
+        raise ValueError('cleanup requires an isolated Testing scope')
+    for path in expected:
+        if path != prefix and not path.startswith(prefix + '/'):
+            raise ValueError('cleanup path outside fixture')
+    for path in sorted(expected, key=lambda x: (-x.count('/'), x)):
+        cli([*connection, 'delete-node', '--path', path,
+             '--expected-etag', expected[path], '--json'])
+    remaining = cli([*connection, 'list-nodes', '--prefix', prefix, '--recursive', '--json'])
+    if remaining:
+        raise workflow.WorkflowError('test cleanup incomplete; unexpected nodes retained')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--database-id', required=True)
@@ -32,7 +46,7 @@ def main():
     args = parser.parse_args()
     root = MODULE.resolve().parents[1]
     run_id = uuid.uuid4().hex
-    prefix = f'/Knowledge/kinic-superpowers/live-check-{run_id}'
+    prefix = f'/Testing/kinic-superpowers/live-check-{run_id}'
     local = root / '.superpowers' / 'live-check' / run_id
     local.mkdir(parents=True)
     cli = workflow.CLI(str(Path(args.cli).resolve()), cwd=root,
@@ -64,7 +78,8 @@ def main():
                          '--recursive', '--json'])
         if inventory != []:
             raise workflow.WorkflowError('fresh test prefix unexpectedly occupied')
-        cli([*connection, 'mkdir-node', '--path', prefix, '--json'])
+        for parent in ('/Testing', '/Testing/kinic-superpowers', prefix):
+            cli([*connection, 'mkdir-node', '--path', parent, '--json'])
         # Explicit bootstrap of unique test-only nodes; production adapter never
         # treats an arbitrary failed read as permission to create a page.
         for role, item in artifacts.items():
@@ -125,6 +140,14 @@ def main():
             check('dirty-copy-preserved')
         else:
             raise workflow.WorkflowError('dirty copy unexpectedly overwritten')
+        inventory = cli([*connection, 'list-nodes', '--prefix', prefix, '--recursive', '--limit', '100', '--json'])
+        expected_paths = {prefix, *(item['path'] for item in artifacts.values())}
+        if {node['path'] for node in inventory} != expected_paths:
+            raise workflow.WorkflowError('unexpected fixture inventory; preserve it for inspection')
+        report['cleanup_snapshot'] = {node['path']: node['etag'] for node in inventory}
+        save()
+        cleanup_fixture(cli, connection, prefix, report['cleanup_snapshot'])
+        check('fixture-cleaned')
         report['status'] = 'passed'
         save()
         print(json.dumps({'report': str(report_file), 'status': 'passed', 'prefix': prefix}), flush=True)

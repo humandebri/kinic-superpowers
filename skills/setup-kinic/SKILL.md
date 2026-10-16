@@ -23,11 +23,15 @@ the adapter need not be present in that repository.
    retain its ID internally. Do not guess from recency or choose an arbitrary DB.
    With no writable candidates, explain the access issue; do not create a DB.
 3. Run `python3 ADAPTER init`, adding `--database-id ID` only when resolving
-   an ambiguous choice. Omit `--scope`: the adapter generates a unique project
-   scope and reuses it on subsequent runs. Honor an explicitly requested scope.
+   an ambiguous choice. Omit `--scope`: the adapter proposes a repository-named project
+   scope and reuses saved settings on subsequent runs. Honor an explicitly requested scope.
    A v1 configuration needs explicit `--migrate` to register its preserved pages;
    use it when the user requests migration, rather than replacing their config.
-4. Report the selected database's name and that setup is saved. New workflow
+4. Run `python3 ADAPTER project register` to verify repository identity and
+   register or reuse its fixed Wiki project ID. A same-name different repository
+   is a collision: choose a distinct project name with the human, using
+   `project register --name NAME`; never merge namespaces by name alone.
+5. Report the selected database's name and that setup is saved. New workflow
    requests can now use `kinic-superpowers:using-superpowers`. Setup alone does
    not create an application workflow, imply approvals or start implementation.
 

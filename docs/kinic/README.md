@@ -1,7 +1,7 @@
 # Kinic Superpowers
 
 This fork retains Superpowers' development method while making existing Kinic
-Wiki file nodes authoritative for design, plan, progress, review and completion.
+Wiki authoritative for documents actually authored under the upstream method.
 One saved connection supports multiple cases, with selection scoped to each
 Codex chat. Source editing, test execution and Git operations run locally.
 
@@ -23,6 +23,7 @@ Initialize once:
 ```bash
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init --inspect
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" project register
 ```
 
 If necessary, provide `--cli /absolute/path/to/kinic-vfs-cli` and a human-authorized
@@ -43,7 +44,8 @@ Worktrees discover the main checkout's connection automatically, even when the
 first initialization happens in a worktree. Setup saves the connection in the
 main checkout and ignores it in Git there. Working copies,
 baselines, initialization journals and chat bindings stay in each checkout's
-ignored `.superpowers/` directory. Do not copy these directories between worktrees.
+ignored `.superpowers/` directory. Authored document working copies use upstream
+`docs/superpowers/specs/` and `docs/superpowers/plans/` paths. Do not copy these directories between worktrees.
 
 ## Commands
 
@@ -61,12 +63,34 @@ python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID pu
 Use the actual chat ID from the hook, never an invented or latest-session ID.
 Automation can use `--workflow WORKFLOW_ID` instead. A selected chat cannot use
 a conflicting explicit ID until `workflow use` intentionally changes its binding.
-Missing selection is an error. `workflow list` reads wiki manifests, including
-incomplete cases. `workflow new` creates a UUID scope, five pages and a manifest;
-normal operations only accept a ready manifest. A failure reports a recovery
-command, `workflow new --resume WORKFLOW_ID`. Retry preserves owned pages and
-refuses foreign collisions. The local journal is saved before remote creation;
-keep it until initialization has finished.
+Missing selection is an error for case operations. Questions, quick changes and
+explicit spikes do not need case provisioning. `workflow list` reads Wiki records.
+`workflow new` registers a UUID and title with zero placeholder documents. `ready`
+means registration completed, not design approval or content completeness.
+A failed registration reports `workflow new --resume WORKFLOW_ID`.
+
+Author documents when the upstream skill calls for them, then publish:
+
+```bash
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow document spec --file docs/superpowers/specs/2026-10-16-example-design.md
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow document plan --file docs/superpowers/plans/2026-10-16-example.md
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow state --summary "Design approved; implementation next"
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" workflow index
+```
+
+The progress file is the upstream helper's ledger, including its plan identity
+first line. Register its actual helper-resolved path with `workflow document
+progress --file ...`. Review/completion are optional authored reports. First
+publication rejects existing foreign pages atomically; retries recover only the
+same workflow's exact content. Update registered documents using pull/push.
+An empty case reports `no_documents`; an unregistered role reports `not_created`.
+Neither is a missing remote file. Missing registered files remain errors.
+
+Project registration stores a fixed UUID and credential-free repository identity.
+Same-remote clones reuse the project; same-named different remotes are rejected.
+New default scopes are `/Knowledge/projects/<repository-name>`, without location
+hashes. Saved scopes remain unchanged. Explicit isolated test scopes may live
+under `/Testing/kinic-superpowers/`.
 
 `status` reports local baselines and dirty copies; it does not check the remote.
 Version 2 artifact results also include `workflow_id` and `workflow_title`, so
@@ -100,7 +124,7 @@ and command arguments remain supported as a single workflow. Version 1 users
 still provide any required CLI/identity flags. Explicit migration uses
 `init --database-id DB --scope /Knowledge/projects/example --migrate` and the
 appropriate CLI/identity flags. It keeps a Git-ignored `.v1-backup`, registers
-the existing five mappings in a new manifest, and leaves their contents and
+the existing mappings in a new manifest, and leaves their contents and
 etags unchanged. Select the returned/imported workflow before normal v2 use.
 
 Each invocation writes one artifact. There is no atomic transaction across
@@ -121,11 +145,11 @@ The integration sections in the upstream skills take precedence over their
 default local storage instructions when a configuration exists. Without a
 configuration this fork does not start a Kinic workflow.
 
-Approvals are recorded with the exact remote spec/plan revision and human
-authorization evidence in progress. Review records identify the spec and plan
-revisions plus the Git commit reviewed. This version does not authenticate an
-approver or automatically invalidate approvals: agents must compare revisions
-at resume/review and obtain renewed approval whenever a spec/plan etag changes.
+The upstream skills decide approval and review requirements. Etags protect
+concurrent writes; they do not impose blanket reapproval or extra review loops.
+Bounded plan corrections retain upstream's ledgered rulings. Inline final fixes
+and subagent fix/re-review loops remain distinct. See the pinned
+[upstream correspondence](upstream/contract.md).
 
 Keep code and executable tests in Git/local or CI. Record commands, exit status,
 commit IDs and durable evidence links in progress/review; do not treat pasted
@@ -156,8 +180,8 @@ live-check report retains its original diagnostic as historical evidence.
 An earlier attempt failed before page creation because the parent folder did
 not exist. Bootstrap now creates the unique run folder first.
 
-The opt-in reproduction command (creates and retains five new synthetic pages;
-the parent `/Knowledge/kinic-superpowers` must already exist) is:
+The opt-in reproduction command (creates synthetic transport fixtures under
+`/Testing/kinic-superpowers/` and deletes them after verification) is:
 
 ```bash
 python3 scripts/kinic-live-check.py --database-id DATABASE_ID --cli /absolute/path/to/kinic-vfs-cli --allow-non-ii-identity --create-test-pages

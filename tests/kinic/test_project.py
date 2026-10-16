@@ -42,8 +42,26 @@ class Fake:
         if 'mkdir-node' in args:
             self.nodes[path] = {'path': path, 'kind': 'folder', 'content': '', 'metadata_json': '{}', 'etag': '1'}
         elif 'write-node' in args:
+            expected = args[args.index('--expected-etag') + 1] if '--expected-etag' in args else None
+            if (path in self.nodes and self.nodes[path]['etag'] != expected) or (path not in self.nodes and expected is not None):
+                raise p.ProjectError('etag conflict')
             self.nodes[path] = {'path': path, 'kind': 'file', 'content': Path(args[args.index('--input') + 1]).read_text(), 'metadata_json': args[args.index('--metadata-json') + 1], 'etag': str(len(self.calls))}
         return {'node': self.nodes[path]}
+
+
+def legacy_new(project, title):
+    """Simulate a persisted v1 creation journal from an older installation."""
+    wid = str(p.uuid.uuid4())
+    prefix = project._manifest_path(wid).rsplit('/', 1)[0]
+    artifacts = {}
+    for role in ('spec', 'plan', 'progress', 'review', 'completion'):
+        local = f'.superpowers/workflows/{wid}/{wid if role == "plan" else role}.md'
+        if role == 'progress':
+            local = f'.superpowers/sdd/{wid}/progress.md'
+        artifacts[role] = {'path': f'{prefix}/{role}.md', 'local': local}
+    record = dict(version=1, id=wid, title=title, nonce=str(p.uuid.uuid4()), state='initializing', artifacts=artifacts, project_fingerprint=p.fingerprint(project.config))
+    project._save_state(project.directory / 'journals' / (wid + '.json'), record)
+    return project.new(resume=wid)
 
 
 class ProjectTests(unittest.TestCase):
@@ -70,7 +88,7 @@ class ProjectTests(unittest.TestCase):
     def test_partial_resume_preserves_owned_content(self):
         self.fake.fail = '/plan.md'
         with self.assertRaises(p.ProjectError):
-            self.project.new('partial')
+            legacy_new(self.project, 'partial')
         record = json.loads(next((self.root / '.superpowers/kinic-project/journals').glob('*.json')).read_text())
         target = record['artifacts']['spec']['path']
         self.fake.nodes[target]['content'] = 'human edits'
@@ -82,7 +100,7 @@ class ProjectTests(unittest.TestCase):
     def test_foreign_content_is_never_replaced(self):
         self.fake.fail = '/plan.md'
         with self.assertRaises(p.ProjectError):
-            self.project.new('partial')
+            legacy_new(self.project, 'partial')
         record = json.loads(next((self.root / '.superpowers/kinic-project/journals').glob('*.json')).read_text())
         self.fake.fail = None
         path = record['artifacts']['plan']['path']
@@ -128,7 +146,7 @@ class ProjectTests(unittest.TestCase):
         config = p.initialize(root, run=self.discovery_transport(linked='db-linked', databases=[
             {'database_id': 'db-linked', 'name': 'Linked wiki', 'role': 'writer', 'status': 'active'}]))
         self.assertEqual(config['database_id'], 'db-linked')
-        self.assertTrue(config['scope'].startswith('/Knowledge/projects/new-project-'))
+        self.assertEqual(config['scope'], '/Knowledge/projects/new-project')
         self.assertTrue(any('status' in args and 'db-linked' in args for args in self.fake.calls))
 
     def test_first_init_in_git_worktree_shares_config_and_keeps_state_local(self):
@@ -147,7 +165,7 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(before, {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
         config = p.initialize(tree, run=self.fake)
         self.assertEqual(config['scope'], proposal['scope'])
-        self.assertTrue(config['scope'].startswith('/Knowledge/projects/git-project-'))
+        self.assertEqual(config['scope'], '/Knowledge/projects/git-project')
         self.assertTrue((main / '.kinic-superpowers.json').is_file())
         self.assertFalse((tree / '.kinic-superpowers.json').exists())
         primary = p.Project(main, run=self.fake)
@@ -265,7 +283,7 @@ class ProjectTests(unittest.TestCase):
                 raise p.ProjectError('timeout after writing')
             return result
         project = p.Project(self.root, run=uncertain)
-        manifest = project.new('uncertain')
+        manifest = legacy_new(project, 'uncertain')
         self.assertEqual(manifest['state'], 'ready')
         spec_writes = [c for c in self.fake.calls if 'write-node' in c and c[c.index('--path') + 1].endswith('/spec.md')]
         self.assertEqual(len(spec_writes), 1)
@@ -282,7 +300,7 @@ class ProjectTests(unittest.TestCase):
         a = p.Project(main, run=self.fake)
         b = p.Project(child, run=self.fake)
         self.assertEqual(a.config_path, b.config_path)
-        manifest = a.new('worktree')
+        manifest = legacy_new(a, 'worktree')
         a.use(manifest['id'], 'same-session')
         with self.assertRaises(p.ProjectError):
             b.resolve('same-session')
@@ -405,7 +423,7 @@ class ProjectTests(unittest.TestCase):
     def test_corrupt_resume_journal_rejected_before_remote_io(self):
         self.fake.fail = '/plan.md'
         with self.assertRaises(p.ProjectError):
-            self.project.new('partial')
+            legacy_new(self.project, 'partial')
         journal = next((self.root / '.superpowers/kinic-project/journals').glob('*.json'))
         original = json.loads(journal.read_text())
         for mutate in (lambda r: r.update(id='00000000-0000-4000-8000-000000000001'),

@@ -23,3 +23,4 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+.kinic-superpowers.json.v1-backup

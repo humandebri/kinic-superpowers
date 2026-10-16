@@ -32,9 +32,9 @@ def context_for(payload):
     command = f'python3 {quote(str(PLUGIN_ROOT / "scripts" / "kinic-workflow.py"))} --config {quote(str(config_path))}'
     command += f' --project-root {quote(str(root))}'
     bootstrap = ('Load kinic-superpowers:using-superpowers and its references/kinic-workflow.md before choosing a development workflow. '
-                 'The hook reads local settings only; wiki content and readiness have not been verified. ')
+                 'Follow upstream task size rules first: questions, quick clear changes and explicit spikes do not require document provisioning. The hook reads local settings only; wiki content has not been verified. ')
     if config.get('version', 1) == 1:
-        return bootstrap + f'Legacy single workflow configured. Run `{command} check`, then safely pull/read the configured spec, plan, progress and review before resuming. Preserve dirty copies; never invent approvals.'
+        return bootstrap + f'Legacy single workflow configured. For case recovery or durable document work, run `{command} check`, then safely pull/read the registered documents needed for this task before resuming. Preserve dirty copies; never invent approvals.'
     try:
         project = Project(root, config_path)
         binding_path = project._binding_path(session)
@@ -52,12 +52,12 @@ def context_for(payload):
     except (OSError, ValueError) as error:
         return bootstrap + f'Local session binding is invalid: {error}. Inspect and repair it; do not choose another workflow or use the latest one.'
     if binding is None:
-        return bootstrap + (f'No workflow selected for this session. Run `{command} workflow list`; ask which existing workflow to use, then run '
+        return bootstrap + (f'No workflow selected for this session. For a written project or case recovery, run `{command} workflow list`; if the user has already identified a unique existing workflow, use that selection without reconfirmation; ask only when the intended workflow is unknown or ambiguous. Then run '
                             f'`{command} workflow use WORKFLOW_ID`. If the user requests a new workflow, run `{command} workflow new --title TITLE` '
                             'and bind the returned ID with workflow use. Never automatically select the most recent workflow.')
     return bootstrap + (f'This session is bound to workflow {quote(workflow_id)}. Keep that selection after resume/compaction. '
-                        f'Run `{command} check`, then safely pull/read spec, plan, progress and review using the same command prefix '
-                        '(for example `pull progress`). Verify approved etags, reviewed commit and current progress before implementation. '
+                        f'For case recovery or durable document work, run `{command} check`, then safely pull/read the registered documents needed for this task using the same command prefix '
+                        '(for example `pull progress`). Preserve the upstream ledger identity and verify cited Git commits before resuming. '
                         'Remote changes or a failed sync require reconciliation; never switch to a newer workflow automatically.')
 
 

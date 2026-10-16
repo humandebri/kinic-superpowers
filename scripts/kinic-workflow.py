@@ -13,6 +13,9 @@ import subprocess
 import sys
 import tempfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from kinic_workspace import execution_workspace, exclude_document_copy
+
 
 class WorkflowError(Exception):
     pass
@@ -68,7 +71,7 @@ class Workspace:
         if not isinstance(self.database, str) or not self.database.strip():
             raise WorkflowError('database_id is required')
         self.artifacts = self.data.get('artifacts')
-        if not isinstance(self.artifacts, dict) or not self.artifacts:
+        if not isinstance(self.artifacts, dict):
             raise WorkflowError('artifacts must be a nonempty object')
         remote_paths, local_paths = set(), set()
         for role, item in self.artifacts.items():
@@ -106,6 +109,14 @@ class Workspace:
             raise WorkflowError(f'unknown artifact: {role}')
         item = self.artifacts[role]
         local = self.local_path(item['local'])
+        if self.data.get('lazy_documents') and role in ('progress', 'review', 'completion'):
+            plan = self.artifacts['plan']['local']
+            try:
+                expected = execution_workspace(self.root, plan)
+            except ValueError as exc:
+                raise WorkflowError(str(exc)) from exc
+            if expected != local.parent:
+                raise WorkflowError('sdd-workspace ownership changed; reload the workspace mapping before continuing')
         key = digest(json.dumps([self.database, item['path'], item['local']]))
         cache = (self.root / '.superpowers' / 'kinic').resolve()
         if not cache.is_relative_to(self.root):
@@ -132,6 +143,7 @@ class Workspace:
             'etag': node['etag'], 'sha256': digest(node['content']),
             'metadata_json': node['metadata_json'],
         }))
+        exclude_document_copy(self.root, item['local'])
         return {**self.status(role), 'remote_checked': True}
 
     def push(self, role):
@@ -222,6 +234,12 @@ def argument_parser():
     init.add_argument('--scope', help='Override the saved or automatically generated project scope')
     init.add_argument('--inspect', action='store_true', help='Discover setup settings and named database choices without saving')
     init.add_argument('--migrate', action='store_true', help='Import an existing v1 workflow')
+    project_cmd = commands.add_parser('project', help='Register repository identity in the Wiki')
+    connection_flags(project_cmd, inherited=True)
+    project_actions = project_cmd.add_subparsers(dest='action', required=True)
+    registered = project_actions.add_parser('register')
+    connection_flags(registered, inherited=True)
+    registered.add_argument('--name', help='Explicit URL-safe project name')
     workflow = commands.add_parser('workflow', help='Create, list or select wiki workflows')
     connection_flags(workflow, inherited=True)
     actions = workflow.add_subparsers(dest='action', required=True)
@@ -231,6 +249,15 @@ def argument_parser():
     new.add_argument('--resume', metavar='WORKFLOW_ID')
     listed = actions.add_parser('list', help='List workflows from the wiki')
     connection_flags(listed, inherited=True)
+    document = actions.add_parser('document', help='Publish and register an authored document')
+    connection_flags(document, inherited=True)
+    document.add_argument('role')
+    document.add_argument('--file', required=True)
+    state = actions.add_parser('state', help='Record the current work summary')
+    connection_flags(state, inherited=True)
+    state.add_argument('--summary', required=True)
+    index = actions.add_parser('index', help='Refresh the project document index')
+    connection_flags(index, inherited=True)
     use = actions.add_parser('use', help='Explicitly select a workflow for one chat')
     connection_flags(use, inherited=True)
     use.add_argument('workflow_id')
@@ -268,11 +295,27 @@ def main():
         project = Project(cwd=Path(args.project_root or Path.cwd()), config_path=args.config,
                           cli_override=args.cli,
                           allow_non_ii_identity=args.allow_non_ii_identity)
+        if args.command == 'project':
+            from kinic_registry import register
+            print(json.dumps(register(project, args.name), ensure_ascii=False))
+            return 0
+        if project.config.get('registry_required'):
+            if args.command == 'workflow' and args.action == 'new':
+                from kinic_registry import register
+                register(project)
+            elif not project.config.get('project_id'):
+                raise ProjectError('project is not registered; run project register before selecting or reading workflows')
         if args.command == 'workflow':
             if args.action == 'new':
                 result = project.new(title=args.title, resume=args.resume)
                 if args.session:
                     project.use(result['id'], args.session)
+            elif args.action == 'document':
+                result = project.document(args.role, args.file, session=args.session, workflow_id=args.workflow)
+            elif args.action == 'state':
+                result = project.state(args.summary, session=args.session, workflow_id=args.workflow)
+            elif args.action == 'index':
+                result = project.index()
             elif args.action == 'list':
                 result = project.list()
             else:
@@ -298,6 +341,11 @@ def main():
         if args.command in ('pull', 'push') and args.role is None:
             raise WorkflowError('pull/push require one artifact role')
         roles = [args.role] if args.role is not None else list(work.artifacts)
+        if args.role is not None and args.role not in work.artifacts and project.version == 2 and manifest['version'] == 2 and args.role in ('spec', 'plan', 'progress', 'review', 'completion'):
+            print(json.dumps({**workflow_context, 'role': args.role, 'state': 'not_created', 'remote_checked': False}))
+            return 0 if args.command in ('status', 'check') else 1
+        if not roles:
+            print(json.dumps({**workflow_context, 'state': 'no_documents', 'artifacts': [], 'remote_checked': args.command == 'check'}))
         # Reject selection mistakes before doing any transport work.
         for role in roles:
             work.artifact(role)

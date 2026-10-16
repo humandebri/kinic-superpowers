@@ -45,6 +45,15 @@ class CodexHookTests(unittest.TestCase):
         self.assertIn('kinic-superpowers:using-superpowers', context)
         self.assertFalse((self.project / 'injected').exists())
 
+    def test_hook_defers_to_task_size_and_registered_documents(self):
+        self.config()
+        self.assertIn('task size', self.run_hook())
+        self.bind('chat-a')
+        context = self.run_hook()
+        self.assertNotIn('pull/read spec, plan, progress and review', context)
+        self.assertNotIn('Verify approved etags', context)
+        self.assertIn('registered documents', context)
+
     def test_present_malformed_config_is_actionable(self):
         (self.project / '.kinic-superpowers.json').write_text('{')
         context = self.run_hook()
@@ -91,6 +100,12 @@ class CodexHookTests(unittest.TestCase):
         self.assertIn('workflow list', self.run_hook(cwd=nested))
         after = {str(p): p.read_bytes() for p in self.project.rglob('*') if p.is_file()}
         self.assertEqual(before, after)
+
+    def test_explicit_user_selection_does_not_require_reconfirmation(self):
+        self.config()
+        context = self.run_hook()
+        self.assertIn("user has already identified", context)
+        self.assertIn("ambiguous", context)
 
     def test_resume_compact_use_same_local_context(self):
         self.config()
