@@ -199,6 +199,13 @@ class ScopeTests(unittest.TestCase):
             with self.assertRaises(p.ProjectError):
                 m.migrate(self.project, scope, apply=True)
 
+    def test_inspection_does_not_create_or_modify_local_state(self):
+        def tree():
+            return {str(path.relative_to(self.root)): path.read_bytes() if path.is_file() else None for path in self.root.rglob('*')}
+        before = tree()
+        self.run_move(False)
+        self.assertEqual(tree(), before)
+
     def test_cli_has_inspection_default_and_explicit_apply(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location('scope_cli', Path(__file__).resolve().parents[2] / 'scripts/kinic-workflow.py')

@@ -242,6 +242,8 @@ def _summary(journal, apply):
 def migrate(project, scope, apply=False):
     _path(scope)
     path = journal_path(project)
+    if not apply:
+        return _migrate(project, scope, False, path)
     # Use the primary checkout even when invoked from a linked worktree.
     import fcntl
     lock_path = _contained(project.config_path.parent, path.with_suffix('.lock'))
