@@ -124,7 +124,7 @@ if __name__ == '__main__': unittest.main()
 class RegistryWiringTests(unittest.TestCase):
     def test_default_scope_uses_repository_name_without_location_hash(self):
         with patch.object(r, 'propose', return_value={'project_name': 'demo', 'repository_key': 'github.com/org/demo'}):
-            self.assertEqual(p._default_scope(Path('/arbitrary/checkout')), '/Knowledge/projects/demo')
+            self.assertEqual(p._default_scope(Path('/arbitrary/checkout')), '/Knowledge/demo')
     def test_project_register_command_is_available(self):
         import importlib.util
         spec = importlib.util.spec_from_file_location('registry_cli', Path(__file__).resolve().parents[2] / 'scripts/kinic-workflow.py')

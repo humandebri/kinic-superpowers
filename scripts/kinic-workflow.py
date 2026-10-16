@@ -245,6 +245,10 @@ def argument_parser():
     registered = project_actions.add_parser('register')
     connection_flags(registered, inherited=True)
     registered.add_argument('--name', help='Explicit URL-safe project name')
+    moved = project_actions.add_parser('migrate', help='Inspect or resume a scope move without deleting evidence')
+    connection_flags(moved, inherited=True)
+    moved.add_argument('--scope', required=True)
+    moved.add_argument('--apply', action='store_true')
     workflow = commands.add_parser('workflow', help='Create, list or select wiki workflows')
     connection_flags(workflow, inherited=True)
     actions = workflow.add_subparsers(dest='action', required=True)
@@ -299,14 +303,20 @@ def main():
             return 0
         project = Project(cwd=Path(args.project_root or Path.cwd()), config_path=args.config,
                           cli_override=args.cli,
-                          allow_non_ii_identity=args.allow_non_ii_identity)
+                          allow_non_ii_identity=args.allow_non_ii_identity,
+                          allow_migration=args.command == 'project' and args.action == 'migrate')
         if args.command == 'doctor':
             result = project.doctor(session=args.session)
             print(json.dumps(result, ensure_ascii=False))
             return 0 if result['status'] == 'ok' else 1
         if args.command == 'project':
             from kinic_registry import register
-            print(json.dumps(register(project, args.name), ensure_ascii=False))
+            if args.action == 'migrate':
+                from kinic_scope_migration import migrate
+                result = migrate(project, args.scope, apply=args.apply)
+            else:
+                result = register(project, args.name)
+            print(json.dumps(result, ensure_ascii=False))
             return 0
         if project.config.get('registry_required'):
             if args.command == 'workflow' and args.action == 'new':
@@ -379,6 +389,8 @@ def main():
                               'checks': [{'id': 'adapter.configuration', 'status': 'error',
                                           'required': True, 'detail': str(exc)}]}))
             return 1
+        if args.command == 'project' and args.action == 'migrate':
+            print(json.dumps({'applied': False, 'phase': 'blocked', 'conflicts': [str(exc)]}))
         print(f'kinic-workflow: {exc}', file=sys.stderr)
         return 1
     return exit_code

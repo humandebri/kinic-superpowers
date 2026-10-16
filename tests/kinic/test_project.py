@@ -150,7 +150,7 @@ class ProjectTests(unittest.TestCase):
         config = p.initialize(root, run=self.discovery_transport(linked='db-linked', databases=[
             {'database_id': 'db-linked', 'name': 'Linked wiki', 'role': 'writer', 'status': 'active'}]))
         self.assertEqual(config['database_id'], 'db-linked')
-        self.assertEqual(config['scope'], '/Knowledge/projects/new-project')
+        self.assertEqual(config['scope'], '/Knowledge/new-project')
         self.assertTrue(any('status' in args and 'db-linked' in args for args in self.fake.calls))
 
     def test_first_init_in_git_worktree_shares_config_and_keeps_state_local(self):
@@ -169,7 +169,7 @@ class ProjectTests(unittest.TestCase):
         self.assertEqual(before, {str(path): path.read_bytes() for path in self.root.rglob('*') if path.is_file()})
         config = p.initialize(tree, run=self.fake)
         self.assertEqual(config['scope'], proposal['scope'])
-        self.assertEqual(config['scope'], '/Knowledge/projects/git-project')
+        self.assertEqual(config['scope'], '/Knowledge/git-project')
         self.assertTrue((main / '.kinic-superpowers.json').is_file())
         self.assertFalse((tree / '.kinic-superpowers.json').exists())
         primary = p.Project(main, run=self.fake)

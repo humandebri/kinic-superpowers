@@ -115,7 +115,7 @@ Neither is a missing remote file. Missing registered files remain errors.
 
 Project registration stores a fixed UUID and credential-free repository identity.
 Same-remote clones reuse the project; same-named different remotes are rejected.
-New default scopes are `/Knowledge/projects/<repository-name>`, without location
+New default scopes are `/Knowledge/<repository-name>`, without location
 hashes. Saved scopes remain unchanged. Explicit isolated test scopes may live
 under `/Testing/kinic-superpowers/`.
 
@@ -149,7 +149,7 @@ differs from the baseline; it is not a silent local success.
 The original version 1 [configuration example](../../kinic-workflow.example.json)
 and command arguments remain supported as a single workflow. Version 1 users
 still provide any required CLI/identity flags. Explicit migration uses
-`init --database-id DB --scope /Knowledge/projects/example --migrate` and the
+`init --database-id DB --scope /Knowledge/example --migrate` and the
 appropriate CLI/identity flags. It keeps a Git-ignored `.v1-backup`, registers
 the existing mappings in a new manifest, and leaves their contents and
 etags unchanged. Select the returned/imported workflow before normal v2 use.
@@ -227,3 +227,40 @@ multi-workflow validation is recorded in
 
 Future work: atomic provisioning, task ownership/dependencies, machine-checked
 approval invalidation, portable attachment storage, and automated scenario evals.
+
+### Move an existing project scope
+
+Inspect the proposed move, then explicitly apply it:
+
+```sh
+python3 scripts/kinic-workflow.py project migrate --scope /Knowledge/my-repository
+python3 scripts/kinic-workflow.py project migrate --scope /Knowledge/my-repository --apply
+```
+
+The command copies the complete source tree, preserves project/workflow IDs and
+v1/v2 artifact local paths, and updates the shared configuration plus known chat
+bindings, manifest caches and synchronization baselines across linked worktrees.
+Source documents remain in place. Document bodies, including historical approval
+references, are preserved verbatim. Only structured manifest paths/fingerprints
+and index navigation destinations change. The old index becomes a redirect after
+destination readback and source-version checks. Existing unrelated destination
+children remain untouched; colliding files stop the move.
+
+An ignored `.superpowers/kinic-project/scope-migration.json` in the configuration
+owner's checkout retains the original config, full source nodes and etags, exact
+path mapping, local state snapshots, pending writes and copy acknowledgements.
+Repeat the same `project migrate --scope ... --apply` command after an interruption.
+It uses the saved original scope even after config cutover. Other project commands
+stop while the migration is incomplete. Conflicts are returned as JSON and require
+reconciliation; do not delete the journal to bypass them.
+
+Local document contents are never overwritten. Baselines matching the source's
+exact etag and content hash are rekeyed to the copy's etag, preserving dirty local
+edits. Stale baselines are retained under the original key and are not promoted;
+the destination remains untracked until explicitly reconciled.
+
+This is a sequence of conditional writes, not a distributed transaction. Keep
+remote writers and other local sessions quiescent during the move. Source or copied
+target edits halt before cutover when detected; interruptions during local cutover
+remain blocked and resumable. A journal supports one explicit move and must be
+retained as evidence after completion.

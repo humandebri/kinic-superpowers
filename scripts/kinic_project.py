@@ -160,7 +160,7 @@ def _validate_connection(config):
 
 def _default_scope(root):
     from kinic_registry import propose
-    return '/Knowledge/projects/' + propose(root)['project_name']
+    return '/Knowledge/' + propose(root)['project_name']
 
 
 def _database_name(databases, database_id):
@@ -362,9 +362,13 @@ def initialize(cwd, database_id=None, scope=None, cli_path='kinic-vfs-cli',
 
 
 class Project:
-    def __init__(self, cwd, config_path=None, cli_override=None, allow_non_ii_identity=False, run=None):
+    def __init__(self, cwd, config_path=None, cli_override=None, allow_non_ii_identity=False, run=None, allow_migration=False):
         self.root, self.config_path = discover(cwd, config_path)
         self.config = _read(self.config_path)
+        if not allow_migration:
+            migration = self.config_path.parent / '.superpowers/kinic-project/scope-migration.json'
+            if migration.exists() and _read(migration).get('phase') != 'complete':
+                raise ProjectError('scope migration is incomplete; resume project migrate before other operations')
         self.version = self.config.get('version')
         if self.version not in (1, 2, 3):
             raise ProjectError('unsupported project config version')
