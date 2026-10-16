@@ -71,3 +71,10 @@ transaction. Changed sources/destinations and new children stop cleanup. The fir
 cleanup attempt stopped before deletion because this run's publication had changed
 the destination index. A separate journal records deliberate index revalidation;
 source snapshots were not refreshed to bypass change detection.
+
+The isolated lazy-document/native-recovery test namespace was also deleted after
+its reports were captured, with an etag snapshot and an empty-inventory check.
+
+Historical cleanup completed: all 38 snapshotted nodes were conditionally deleted
+and each deletion was read back. No source snapshot was changed. The substantive
+e2e originals remain intact; the project index points to the organized copies.
