@@ -32,6 +32,17 @@ class CodexHookTests(unittest.TestCase):
             self.assertEqual(data['hookSpecificOutput']['hookEventName'], 'SessionStart')
         return data.get('hookSpecificOutput', {}).get('additionalContext', '')
 
+    def test_v3_hook_is_local_and_preserves_session_selection(self):
+        path = self.config()
+        data = json.loads(path.read_text())
+        data['version'] = 3
+        path.write_text(json.dumps(data))
+        self.bind('chat-a')
+        before = {str(f): f.read_bytes() for f in self.project.rglob('*') if f.is_file()}
+        self.assertIn('bound to workflow', self.run_hook())
+        self.assertIn('No workflow selected', self.run_hook(session='other'))
+        self.assertEqual(before, {str(f): f.read_bytes() for f in self.project.rglob('*') if f.is_file()})
+
     def test_no_config_is_silent(self):
         self.assertEqual(self.run_hook(), '')
 
@@ -44,6 +55,15 @@ class CodexHookTests(unittest.TestCase):
         self.assertIn(str(ROOT / 'scripts' / 'kinic-workflow.py'), context)
         self.assertIn('kinic-superpowers:using-superpowers', context)
         self.assertFalse((self.project / 'injected').exists())
+
+    def test_hook_defers_to_task_size_and_registered_documents(self):
+        self.config()
+        self.assertIn('task size', self.run_hook())
+        self.bind('chat-a')
+        context = self.run_hook()
+        self.assertNotIn('pull/read spec, plan, progress and review', context)
+        self.assertNotIn('Verify approved etags', context)
+        self.assertIn('registered documents', context)
 
     def test_present_malformed_config_is_actionable(self):
         (self.project / '.kinic-superpowers.json').write_text('{')
@@ -91,6 +111,12 @@ class CodexHookTests(unittest.TestCase):
         self.assertIn('workflow list', self.run_hook(cwd=nested))
         after = {str(p): p.read_bytes() for p in self.project.rglob('*') if p.is_file()}
         self.assertEqual(before, after)
+
+    def test_explicit_user_selection_does_not_require_reconfirmation(self):
+        self.config()
+        context = self.run_hook()
+        self.assertIn("user has already identified", context)
+        self.assertIn("ambiguous", context)
 
     def test_resume_compact_use_same_local_context(self):
         self.config()

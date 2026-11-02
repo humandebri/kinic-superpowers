@@ -1,13 +1,14 @@
 # Kinic Superpowers
 
 This fork retains Superpowers' development method while making existing Kinic
-Wiki file nodes authoritative for design, plan, progress, review and completion.
+Wiki authoritative for documents actually authored under the upstream method.
 One saved connection supports multiple cases, with selection scoped to each
 Codex chat. Source editing, test execution and Git operations run locally.
 
 ## Prerequisites and setup
 
 - Python 3.9+ and an installed, authenticated `kinic-vfs-cli` supporting
+  `database current --json`, TOML-preserving `database link`, `agent doctor --json`,
   `read-node --json` and `write-node --expected-etag --json`.
 - The adapter discovers the saved/CLI-linked or sole active writable database.
   With multiple candidates, choose a database by name in chat. The adapter
@@ -23,11 +24,17 @@ Initialize once:
 ```bash
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init --inspect
 python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" init
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" project register
 ```
 
 If necessary, provide `--cli /absolute/path/to/kinic-vfs-cli` and a human-authorized
 `--allow-non-ii-identity` at initialization. The adapter saves the CLI location,
-endpoint and exact principal in Git-ignored `.kinic-superpowers.json`. Explicit
+scope, exact authorized principal and an endpoint binding snapshot in Git-ignored
+`.kinic-superpowers.json` version 3. Common connection settings are saved by the
+CLI in `.kinic/config.toml`; its native precedence is authoritative. Before each
+remote operation the adapter resolves the effective connection without endpoint
+flags, rejects destination drift, checks the principal, then pins that checked
+connection for transport. Explicit
 CLI paths and relative PATH entries are resolved to an absolute path before
 saving, so they remain usable from another checkout. The adapter checks the
 active principal on access and stops on mismatch without switching identity.
@@ -43,7 +50,29 @@ Worktrees discover the main checkout's connection automatically, even when the
 first initialization happens in a worktree. Setup saves the connection in the
 main checkout and ignores it in Git there. Working copies,
 baselines, initialization journals and chat bindings stay in each checkout's
-ignored `.superpowers/` directory. Do not copy these directories between worktrees.
+ignored `.superpowers/` directory. Authored document working copies use upstream
+`docs/superpowers/specs/` and `docs/superpowers/plans/` paths. Do not copy these directories between worktrees.
+
+## Shared-settings migration and diagnostics
+
+Existing v1/v2 configurations remain readable. Explicitly run `init --migrate`
+to move to version 3; `init --inspect` leaves old settings untouched. Migration
+backs up the old adapter configuration to `.v1-backup` or `.v2-backup`, rejects
+conflicting common settings, and verifies CLI resolution after linking. It keeps
+the scope, project registration, authorized principal and CLI executable. An
+unchanged v2 connection/scope retains its fingerprint, cached manifests and
+session bindings. If linking succeeds but readback fails, reconcile overriding
+settings and retry; the original adapter file and backup remain available.
+
+Run `doctor --json` for read-only diagnostics. It calls native `agent doctor`
+and adds project configuration, destination binding and local session checks.
+`document_transport: ok` means the native authenticated document read checks
+succeeded; it does not establish the adapter's authorized principal because
+native doctor does not expose it. That check remains `unknown`, and the overall
+status/exit code reflects required unknown checks. Ordinary operations verify
+the principal separately. Optional learning APIs and plugin findings remain in
+the report with `required: false`; they never gate ordinary document transport.
+Doctor performs no setup, credential refresh, plugin installation or file writes.
 
 ## Commands
 
@@ -61,12 +90,34 @@ python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID pu
 Use the actual chat ID from the hook, never an invented or latest-session ID.
 Automation can use `--workflow WORKFLOW_ID` instead. A selected chat cannot use
 a conflicting explicit ID until `workflow use` intentionally changes its binding.
-Missing selection is an error. `workflow list` reads wiki manifests, including
-incomplete cases. `workflow new` creates a UUID scope, five pages and a manifest;
-normal operations only accept a ready manifest. A failure reports a recovery
-command, `workflow new --resume WORKFLOW_ID`. Retry preserves owned pages and
-refuses foreign collisions. The local journal is saved before remote creation;
-keep it until initialization has finished.
+Missing selection is an error for case operations. Questions, quick changes and
+explicit spikes do not need case provisioning. `workflow list` reads Wiki records.
+`workflow new` registers a UUID and title with zero placeholder documents. `ready`
+means registration completed, not design approval or content completeness.
+A failed registration reports `workflow new --resume WORKFLOW_ID`.
+
+Author documents when the upstream skill calls for them, then publish:
+
+```bash
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow document spec --file docs/superpowers/specs/2026-10-16-example-design.md
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow document plan --file docs/superpowers/plans/2026-10-16-example.md
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" --session CHAT_ID workflow state --summary "Design approved; implementation next"
+python3 "$KINIC_SUPERPOWERS_ROOT/scripts/kinic-workflow.py" workflow index
+```
+
+The progress file is the upstream helper's ledger, including its plan identity
+first line. Register its actual helper-resolved path with `workflow document
+progress --file ...`. Review/completion are optional authored reports. First
+publication rejects existing foreign pages atomically; retries recover only the
+same workflow's exact content. Update registered documents using pull/push.
+An empty case reports `no_documents`; an unregistered role reports `not_created`.
+Neither is a missing remote file. Missing registered files remain errors.
+
+Project registration stores a fixed UUID and credential-free repository identity.
+Same-remote clones reuse the project; same-named different remotes are rejected.
+New default scopes are `/Knowledge/<repository-name>`, without location
+hashes. Saved scopes remain unchanged. Explicit isolated test scopes may live
+under `/Testing/kinic-superpowers/`.
 
 `status` reports local baselines and dirty copies; it does not check the remote.
 Version 2 artifact results also include `workflow_id` and `workflow_title`, so
@@ -98,9 +149,9 @@ differs from the baseline; it is not a silent local success.
 The original version 1 [configuration example](../../kinic-workflow.example.json)
 and command arguments remain supported as a single workflow. Version 1 users
 still provide any required CLI/identity flags. Explicit migration uses
-`init --database-id DB --scope /Knowledge/projects/example --migrate` and the
+`init --database-id DB --scope /Knowledge/example --migrate` and the
 appropriate CLI/identity flags. It keeps a Git-ignored `.v1-backup`, registers
-the existing five mappings in a new manifest, and leaves their contents and
+the existing mappings in a new manifest, and leaves their contents and
 etags unchanged. Select the returned/imported workflow before normal v2 use.
 
 Each invocation writes one artifact. There is no atomic transaction across
@@ -121,11 +172,11 @@ The integration sections in the upstream skills take precedence over their
 default local storage instructions when a configuration exists. Without a
 configuration this fork does not start a Kinic workflow.
 
-Approvals are recorded with the exact remote spec/plan revision and human
-authorization evidence in progress. Review records identify the spec and plan
-revisions plus the Git commit reviewed. This version does not authenticate an
-approver or automatically invalidate approvals: agents must compare revisions
-at resume/review and obtain renewed approval whenever a spec/plan etag changes.
+The upstream skills decide approval and review requirements. Etags protect
+concurrent writes; they do not impose blanket reapproval or extra review loops.
+Bounded plan corrections retain upstream's ledgered rulings. Inline final fixes
+and subagent fix/re-review loops remain distinct. See the pinned
+[upstream correspondence](upstream/contract.md).
 
 Keep code and executable tests in Git/local or CI. Record commands, exit status,
 commit IDs and durable evidence links in progress/review; do not treat pasted
@@ -156,8 +207,8 @@ live-check report retains its original diagnostic as historical evidence.
 An earlier attempt failed before page creation because the parent folder did
 not exist. Bootstrap now creates the unique run folder first.
 
-The opt-in reproduction command (creates and retains five new synthetic pages;
-the parent `/Knowledge/kinic-superpowers` must already exist) is:
+The opt-in reproduction command (creates synthetic transport fixtures under
+`/Testing/kinic-superpowers/` and deletes them after verification) is:
 
 ```bash
 python3 scripts/kinic-live-check.py --database-id DATABASE_ID --cli /absolute/path/to/kinic-vfs-cli --allow-non-ii-identity --create-test-pages
@@ -176,3 +227,40 @@ multi-workflow validation is recorded in
 
 Future work: atomic provisioning, task ownership/dependencies, machine-checked
 approval invalidation, portable attachment storage, and automated scenario evals.
+
+### Move an existing project scope
+
+Inspect the proposed move, then explicitly apply it:
+
+```sh
+python3 scripts/kinic-workflow.py project migrate --scope /Knowledge/my-repository
+python3 scripts/kinic-workflow.py project migrate --scope /Knowledge/my-repository --apply
+```
+
+The command copies the complete source tree, preserves project/workflow IDs and
+v1/v2 artifact local paths, and updates the shared configuration plus known chat
+bindings, manifest caches and synchronization baselines across linked worktrees.
+Source documents remain in place. Document bodies, including historical approval
+references, are preserved verbatim. Only structured manifest paths/fingerprints
+and index navigation destinations change. The old index becomes a redirect after
+destination readback and source-version checks. Existing unrelated destination
+children remain untouched; colliding files stop the move.
+
+An ignored `.superpowers/kinic-project/scope-migration.json` in the configuration
+owner's checkout retains the original config, full source nodes and etags, exact
+path mapping, local state snapshots, pending writes and copy acknowledgements.
+Repeat the same `project migrate --scope ... --apply` command after an interruption.
+It uses the saved original scope even after config cutover. Other project commands
+stop while the migration is incomplete. Conflicts are returned as JSON and require
+reconciliation; do not delete the journal to bypass them.
+
+Local document contents are never overwritten. Baselines matching the source's
+exact etag and content hash are rekeyed to the copy's etag, preserving dirty local
+edits. Stale baselines are retained under the original key and are not promoted;
+the destination remains untracked until explicitly reconciled.
+
+This is a sequence of conditional writes, not a distributed transaction. Keep
+remote writers and other local sessions quiescent during the move. Source or copied
+target edits halt before cutover when detected; interruptions during local cutover
+remain blocked and resumable. A journal supports one explicit move and must be
+retained as evidence after completion.

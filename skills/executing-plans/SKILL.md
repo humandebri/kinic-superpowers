@@ -1,13 +1,14 @@
 ---
 name: executing-plans
-description: "Use in a configured Kinic Superpowers project. Use when executing an implementation plan in the current session as the implementer yourself — your human partner chose inline execution, or no subagent tool is available"
+description: "Use in a configured Kinic Superpowers project. Use when executing an implementation plan in the current session as the implementer yourself \u2014 your human partner chose inline execution, or no subagent tool is available"
 ---
 
-## Kinic Wiki integration
-
-First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
-
-
+<!-- KINIC STORAGE START -->
+Apply this fork only in a configured Kinic project. Read
+`../using-superpowers/references/kinic-workflow.md` for Wiki storage and recovery.
+The upstream rules below determine task size, documents, approvals and reviews;
+the storage adapter does not add stages or require placeholder documents.
+<!-- KINIC STORAGE END -->
 # Executing Plans
 
 Execute the plan yourself, task by task, in this session: no implementer

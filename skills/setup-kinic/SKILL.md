@@ -23,11 +23,19 @@ the adapter need not be present in that repository.
    retain its ID internally. Do not guess from recency or choose an arbitrary DB.
    With no writable candidates, explain the access issue; do not create a DB.
 3. Run `python3 ADAPTER init`, adding `--database-id ID` only when resolving
-   an ambiguous choice. Omit `--scope`: the adapter generates a unique project
-   scope and reuses it on subsequent runs. Honor an explicitly requested scope.
+   an ambiguous choice. Omit `--scope`: the adapter proposes a repository-named project
+   scope and reuses saved settings on subsequent runs. Honor an explicitly requested scope.
+   Fresh setup saves common CLI settings through `database link`, then verifies
+   CLI resolution before saving the v3 project binding. Existing v2 settings
+   remain readable; use `init --migrate` when migration is requested. It keeps
+   a `.v2-backup`, rejects conflicting common settings, and preserves project scope.
    A v1 configuration needs explicit `--migrate` to register its preserved pages;
    use it when the user requests migration, rather than replacing their config.
-4. Report the selected database's name and that setup is saved. New workflow
+4. Run `python3 ADAPTER project register` to verify repository identity and
+   register or reuse its fixed Wiki project ID. A same-name different repository
+   is a collision: choose a distinct project name with the human, using
+   `project register --name NAME`; never merge namespaces by name alone.
+5. Report the selected database's name and that setup is saved. New workflow
    requests can now use `kinic-superpowers:using-superpowers`. Setup alone does
    not create an application workflow, imply approvals or start implementation.
 
@@ -36,3 +44,9 @@ Reuse existing human authorization for a non-II identity; supply
 If authorization is missing, ask about the current identity once in plain
 language. Never switch identity or bypass a principal mismatch. Keep CLI errors
 as errors; no local-only fallback. Never save secret keys or tokens.
+
+For read-only diagnostics, run `python3 ADAPTER doctor --json`. Preserve unknown
+results. Learning APIs and plugin findings are optional for ordinary Wiki
+operations; do not run agent setup or install plugins to clear those findings.
+Doctor cannot establish the saved principal when native diagnostics omit it;
+normal document operations separately verify the identity before access.

@@ -3,9 +3,13 @@ name: verification-before-completion
 description: "Use in a configured Kinic Superpowers project. Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always"
 ---
 
+<!-- KINIC STORAGE START -->
+Apply this fork only in a configured Kinic project. Read
+`../using-superpowers/references/kinic-workflow.md` for Wiki storage and recovery.
+The upstream rules below determine task size, documents, approvals and reviews;
+the storage adapter does not add stages or require placeholder documents.
+<!-- KINIC STORAGE END -->
 # Verification Before Completion
-
-Apply this fork only in projects with a discovered `.kinic-superpowers.json`; otherwise leave workflow selection to the host and other installed skills.
 
 ## Overview
 

@@ -9,7 +9,7 @@ If no `.kinic-superpowers.json` is discovered in this checkout or its shared pri
 For an explicit request to connect or initialize Kinic Wiki, use
 `kinic-superpowers:setup-kinic`; that setup skill also applies before configuration.
 
-First read `references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
+First read `references/kinic-workflow.md`. Apply the upstream task-sizing rules first. Resolve this chat’s selected workflow when working with durable case documents; the SessionStart hook supplies the installed adapter command. The reference adapts document storage and recovery to Wiki without adding design, approval or review stages.
 
 
 <SUBAGENT-STOP>

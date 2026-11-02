@@ -1,119 +1,114 @@
-# Kinic Wiki workflow protocol
+# Kinic Wiki storage and recovery
 
-Applies only to configured Kinic Superpowers projects. Resolve configuration
-upward from the current working directory, stopping at the Git checkout root;
-a worktree can share the primary checkout’s connection settings. No config means
-this fork does not choose or start a workflow. A present invalid config or an
-unavailable wiki is an error, never permission to fall back to local-only work.
+Applies only when this checkout or its primary checkout has a valid
+`.kinic-superpowers.json`. Wiki is the document authority; Git remains the code
+and commit authority. Follow the upstream skills for task size, design approval,
+plan contents, execution mode, review loops and final reporting. This reference
+changes storage and recovery, not those development rules.
 
-## Configuration and session selection
+## Classify first
 
-The SessionStart hook gives the exact installed adapter command prefix with
-`--config`, current checkout `--project-root`, and `--session`. Reuse that prefix
-for every operation; never assume the adapter is in the application repository.
-When the hook is unavailable, resolve the script relative to this installed
-skill (`../../scripts/kinic-workflow.py` from the skill directory) and use the actual current chat ID.
-Shell-quote each interpreter, script, config, checkout and session argument,
-including installation paths containing spaces. Never fabricate a session ID or infer a target from the latest workflow.
+Use brainstorming's existing sizing rules. A question or quick clear change
+needs no new workflow/documents merely because this project is configured.
+Explicit throwaway spikes retain upstream's reduced process. A small description
+can remain in chat. For a written project or resuming an existing case, resolve
+the workflow before accessing its documents. An existing bound case remains bound
+when doing a small follow-up; do not switch it implicitly.
 
-For a version 2 configuration:
+## Connection and selection
 
-1. With no bound workflow, run `workflow list`. Ask which existing workflow to
-   select, or use the user's request for a new case to run
-   `workflow new --title TITLE`. Creation automatically provisions the five
-   documents and its manifest. Bind the chosen/returned ID with
-   `workflow use ID`. Do not use an incompletely initialized workflow; rerun
-   creation with `workflow new --resume WORKFLOW_ID`.
-2. To inspect the existing binding without changing it, run `status` using the
-   same session prefix; the adapter resolves that binding and reports errors
-   rather than guessing. A binding belongs to this chat and checkout. Keep it on resume/compaction,
-   even when a newer case exists. A malformed/mismatched binding blocks work.
-   To change it, require the user's intended selection and `workflow use ID`.
-3. Run `check`, then safely `pull ROLE` and read the fetched documents. Preserve
-   dirty working copies and reconcile them before pulling. The manifest/cache
-   supplies paths; never invent UUID folders or artifact mappings. `status`
-   reports local known state only, while `check` reads remote freshness.
-4. `push ROLE` after editing and require acknowledgment before a handoff.
-   Automated commands may pass an explicit workflow ID using `--workflow`;
-   otherwise use the session binding. Never select a different chat’s case.
+Use the exact adapter prefix from SessionStart (installed script, --config,
+--project-root, --session). Without a hook, resolve the adapter from this installed
+skill at `../../scripts/kinic-workflow.py` and use the actual chat ID. Quote paths.
+Setup uses `init --inspect`, the saved/linked writable DB, and repository-derived
+project name; `init` saves the verified connection. `project register` registers
+the repository in the Wiki. No secret keys or tokens are stored. Keep authorized
+identity pinned; a mismatch stops access, never switches identities.
 
-Connection initialization is explicit: run `init --database-id DB --scope PATH`
-with a user-selected destination. Identity authorization is pinned to its
-principal and checked on use; do not switch identities or bypass a mismatch.
-No secrets or raw session transcripts belong in wiki documents or settings.
+Version 3 uses the CLI's `.kinic/config.toml` resolution and native precedence.
+The endpoint fields in `.kinic-superpowers.json` are a binding snapshot: they do
+not override changed environment or CLI settings. Each remote operation resolves
+without those pins, compares the binding and identity, then pins the checked
+transport. Worktrees resolve common settings in the primary checkout while
+keeping their own document copies and chat bindings. Use `init --migrate` for an
+explicit v1/v2 migration; backups and unchanged fingerprints preserve recovery.
+`init --inspect` never performs migration. `doctor --json` provides read-only
+configuration, binding and local session diagnostics. Unknown is unverified;
+optional learning API/plugin findings do not block ordinary document access.
 
-Version 1 configuration remains a single workflow with its existing mappings.
-Use `check`/`pull`/`push`/`status` directly; migration never overwrites its pages.
-Do not copy a shared connection config into worktrees. Each checkout retains
-its own document copies, baseline etags and chat bindings.
 
-## Authority and recovery
+For a case needing durable documents, `workflow list` lists registered cases.
+Use the user's intended case with `workflow use ID`. For a requested new case,
+`workflow new --title TITLE` registers it without creating document placeholders.
+With --session it binds the result. No selection means ask, not guess the latest.
+`ready` describes registration, not design approval or implementation completion.
 
-Wiki artifacts are authoritative; local paths are working copies for task
-helpers. Source editing and test execution stay in Git/local or CI. Use the
-selected workflow’s paths and pass its config, workflow/session identity and
-source etags into subagent briefs. One controller owns artifact writes.
+`status` is local cached state. `check` reads remote freshness; safely `pull ROLE`
+and read the needed registered documents before resuming. `not_created` means
+no document was registered, not a lost file; a missing registered file is an
+error. Preserve dirty local copies and reconcile instead of overwriting them.
+Old configuration/manifest versions keep their existing mappings; do not recreate
+or rewrite their pages as part of reading or starting a session.
 
-Progress starts with a current-state summary (stage, next action, approval
-references and blockers), followed by append-only history. Keep mutable
-approval/state labels out of spec/plan snapshots. Store actual human approval
-against exact spec/plan etags in progress; never manufacture approval.
+## Author and save only actual documents
 
-## Stage contract
+Keep upstream filenames and content:
 
-| Stage | Before work | Durable handoff |
-|---|---|---|
-| Brainstorming | Pull/read spec and progress; consult relevant knowledge | Push spec; record human approval evidence and its exact acknowledged spec etag in progress; push progress |
-| Writing plans | Pull/read spec, plan, progress; check spec approval against fetched etag | Plan includes spec path+etag; push plan; record plan approval with plan etag in progress and push progress |
-| Executing plans / subagent development | Pull/read spec, plan, progress on entry and resume; validate approval references | After every completed task, push progress including task ID, commit IDs, test commands/results, rulings and evidence references before dispatching the next task |
-| Requesting review | Pull/read spec, plan, progress, review; check revisions and Git HEAD | Review includes spec+plan etags, BASE/HEAD SHAs, findings, dispositions and evidence; push review, then its etag/reference in progress |
-| Finishing branch | Pull/read all five roles; check approvals, reviewed HEAD and task verification | Push completion with results, residual issues and PR URL if created; push progress with completion etag before cleanup |
+- Design: `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
+- Plan: `docs/superpowers/plans/YYYY-MM-DD-<feature>.md`.
+- Ledger: run the installed `sdd-workspace PLAN_FILE` helper through bash and use
+  its returned directory. Pass PLAN_FILE relative to the repository root so it
+  survives another checkout. Its first line remains
+  `# SDD ledger — plan: <plan file path>`. Preserve completion/ruling line formats.
 
-For a fresh empty spec/plan/progress node, drafting starts without approval;
-execution still requires the actual approvals. Never manufacture approval to
-advance a stage. Any spec or plan etag change requires comparing the fetched
-content against what was approved. Require renewed human approval before
-dependent implementation; do not infer that a change is too minor to matter.
-If HEAD changed since review,
-review the new changes before claiming completion. These checks are an agent
-responsibility in this pilot, not a server-enforced approval system.
+After authoring a new document, register and publish it with
+`workflow document ROLE --file REPO_RELATIVE_PATH`. For existing registered
+documents, use `push ROLE`. Confirm the acknowledged Wiki path and etag before
+handoff. Replace upstream's document-commit step with that acknowledgement;
+continue committing code normally. Local Markdown is a working copy, not a
+second authority. In plans, retain a reachable Spec reference and its Wiki path
+and acknowledged revision when one exists; do not invent a spec for a plan that
+upstream permits to proceed without one.
 
-On resume, wiki progress supersedes stale local completion lines only after a
-successful pull. Verify cited commits are in the checkout; fetch or report the
-missing checkout state rather than repeating or inventing completed work.
-The progress working copy must match the path resolved by `sdd-workspace` for the
-configured plan. Verify the mapping before running task helpers. After helpers
-append progress, push it. Do not proceed after an unacknowledged push.
+Use spec/plan/progress roles for their corresponding actual documents. Optional
+review/completion roles hold real reports when needed; they are never prerequisite
+empty pages. Use `workflow index` after case/document updates to refresh the
+project navigation. Update the human-readable current status with
+`workflow state --summary TEXT` when it changes; this is not an approval gate.
+Existing custom indexes are not silently overwritten.
 
-One controller writes progress in a working directory. Give subagents the
-relevant fetched text, source paths+etags, and Git revisions; they return changes
-and evidence to the controller. They must not concurrently push the controller's
-working copy. Independent worktrees have independent baselines; etags detect
-conflicting writes but do not provide task ownership or prevent duplicate work.
+## Execution and recovery
 
-## Failure, conflict, and cleanup
+Restore the plan and its ledger into this worktree. Verify the ledger's plan
+identity, Git commits, and actual pending work. Use the selected execution
+skill's helpers, task completion checks and review policy unchanged. Save ledger
+updates after completed tasks and rulings so another chat can recover them.
 
-- If a pull refuses dirty or previously unmanaged local content, preserve it
-  outside the mapped path first. Fetch remote into a clean working copy, then
-  reconcile deliberately. Never discard pending work to make a pull pass.
-- An etag conflict or ambiguous write result stops the handoff. Preserve local
-  content and inspect remote content/revisions. Merge intentionally and obtain
-  a fresh baseline before pushing. Do not auto-retry with a new etag, remove
-  `--expected-etag`, or mark unsent work complete.
-- No wiki access means no new dependent task dispatch. Already-running local
-  work can be preserved with an explicit pending-sync report.
-- Each artifact push is separate. Persist spec/plan/review/completion before
-  publishing a progress reference to its acknowledged revision. A partially
-  successful sequence remains pending, never globally complete.
-  Validation across source documents and progress is non-atomic too; a source
-  can change after checking it. Use one controller and recheck at stage
-  boundaries. Do not describe this pilot as transactional approval enforcement.
-- Before deleting a plan workspace or removing a worktree, ensure its progress,
-  required evidence and final review are durable and retrievable from the wiki
-  or linked Git/CI artifacts. An ephemeral local path is not durable evidence.
-  Preserve the working directory on sync failure. Never delete a directory that
-  contains the selected config or the only copy of bridge snapshots during an
-  active workflow. A later session can reconstruct baselines by pulling into an
-  empty working copy after the previous workflow has been durably handed off.
+An etag change is a concurrency signal. Reconcile the actual content, then use
+upstream's rules to decide whether a design decision needs human input or a plan
+correction can be ruled on by the executor. Storage does not manufacture approval
+or introduce approval gates. Inline final fixes retain inline's TDD fix pass;
+subagent execution retains its own scoped re-review loop.
 
-See `docs/kinic/README.md` in this fork for setup and pilot limitations.
+One controller owns artifact writes. Subagents receive the needed plan/spec,
+Wiki references and Git revisions and return evidence. Copies, baseline etags,
+helper workspaces and chat bindings stay separate per worktree.
+
+## Conflict, completion and cleanup
+
+On conflict or uncertain acknowledgement preserve local content, inspect remote
+content, and reconcile deliberately. Never remove the etag guard or blindly retry
+with a fresh etag. Unavailable Wiki blocks dependent handoffs, not inspection or
+preservation of already completed local work. Report pending synchronization.
+
+Before upstream's local workspace cleanup, save the actual ledger and final
+report containing its exhaustive rulings/deferred findings, verification results,
+and Git/PR references. The report may be in the ledger; a separate completion
+page is optional. Confirm saved content can be read back, update the index, then
+remove only the intended local execution workspace. Keep connection and baseline
+state required by other cases. Do not publish raw transcripts or transient test
+logs as knowledge. Live test fixtures belong under `/Testing/kinic-superpowers/`
+and are removed after their durable test report is captured.
+
+Per-document saves are not a multi-document transaction, approval enforcement,
+or a distributed task lease.

@@ -79,6 +79,7 @@ The underlying commands are:
 ```bash
 python3 /absolute/plugin/path/scripts/kinic-workflow.py init --inspect
 python3 /absolute/plugin/path/scripts/kinic-workflow.py init
+python3 /absolute/plugin/path/scripts/kinic-workflow.py project register
 ```
 
 If the CLI is outside PATH, add `--cli /absolute/path/to/kinic-vfs-cli` once at
@@ -86,14 +87,15 @@ initialization. For a human-authorized non-II identity, also add
 `--allow-non-ii-identity` once. Both settings and the exact principal are saved;
 normal workflow commands need neither connection nor authentication flags.
 Optional `--database-id` and `--scope` still override discovery. An explicit scope
-must be a canonical path below `/Knowledge/`. A generated scope includes the
-repository name and a short hash of its location to separate same-named clones;
-once saved, the scope is reused even if the repository moves.
+must be a canonical path below `/Knowledge/` or the isolated `/Testing/kinic-superpowers/` prefix. Default scopes use the repository name. Registration verifies
+the repository identity and reuses a fixed project UUID across clones; same-named
+different repositories are rejected. Saved scopes remain unchanged.
 
 Open a **new chat** in the configured checkout and request development normally.
 The hook supplies an exact shell-quoted command with config, checkout and
 session ID; the agent lists cases and asks which to use, or creates a new one
-when requested. Creation provisions all five wiki pages automatically. It binds
+when requested. Creation registers the case without placeholder pages. Authored documents are
+published when the corresponding upstream stage needs them; see the command guide. It binds
 the case with `workflow use ID`; normal `check`, `pull`, `push` and `status` then
 use this chat's selection. Another chat can choose a different case. Compaction
 or resuming the same chat preserves its selection.

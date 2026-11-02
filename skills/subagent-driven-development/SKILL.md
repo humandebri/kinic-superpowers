@@ -3,11 +3,12 @@ name: subagent-driven-development
 description: "Use in a configured Kinic Superpowers project. Use when executing implementation plans with independent tasks in the current session"
 ---
 
-## Kinic Wiki integration
-
-First read `../using-superpowers/references/kinic-workflow.md`. Resolve this chat’s selected workflow before pulling or editing its artifacts; the SessionStart hook supplies the exact installed adapter command. Apply the protocol on every entry and resume. Its wiki paths and handoff rules override local defaults below.
-
-
+<!-- KINIC STORAGE START -->
+Apply this fork only in a configured Kinic project. Read
+`../using-superpowers/references/kinic-workflow.md` for Wiki storage and recovery.
+The upstream rules below determine task size, documents, approvals and reviews;
+the storage adapter does not add stages or require placeholder documents.
+<!-- KINIC STORAGE END -->
 # Subagent-Driven Development
 
 Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
