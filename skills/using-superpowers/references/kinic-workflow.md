@@ -91,7 +91,11 @@ or introduce approval gates. Inline final fixes retain inline's TDD fix pass;
 subagent execution retains its own scoped re-review loop.
 
 One controller owns artifact writes. Subagents receive the needed plan/spec,
-Wiki references and Git revisions and return evidence. Copies, baseline etags,
+Wiki references and Git revisions and return evidence. For a review, the Wiki
+references include any project `decisions/` pages and the repository reference
+docs that describe the changed surface, so the reviewer can report a
+contradiction instead of assuming the change is intended. This adds context to
+upstream's review, not a review stage. Copies, baseline etags,
 helper workspaces and chat bindings stay separate per worktree.
 
 ## Conflict, completion and cleanup
