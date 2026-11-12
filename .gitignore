@@ -3,6 +3,8 @@
 .claude/
 .superpowers/
 .kinic-superpowers.json
+# kinic-vfs-cli workspace connection settings (local, per checkout)
+.kinic/
 # Working copies of this wiki-backed validation task; wiki retains exact bytes.
 docs/superpowers/specs/remote-check-design.md
 docs/superpowers/plans/remote-check.md
