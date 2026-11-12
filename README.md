@@ -31,7 +31,7 @@ instead of silently overwritten.
 | Harness | State |
 |---|---|
 | Codex (desktop and CLI) | Supported. Installed-plugin sessions have been checked with the Codex CLI. |
-| Claude Code | Supported through this repository's marketplace. |
+| Claude Code | In progress. The marketplace installs the plugin as `kinic-superpowers`, but the Kinic session hook for Claude Code has not landed yet, so configured projects still get upstream behavior. |
 | Other harnesses (Cursor, Gemini, OpenCode, Kimi, ...) | Manifests are inherited from upstream and still point to upstream Superpowers. They are not Kinic distributions. |
 
 Unlike upstream, the brainstorming visual companion does not load the remote
@@ -80,6 +80,9 @@ does not trust hooks automatically. Details, including hosting the plugin inside
 another repository's marketplace, are in [Codex installation](docs/kinic/codex.md).
 
 ### Claude Code
+
+Claude Code support is in progress (see Status). Once the Kinic session hook
+lands, install with:
 
 ```bash
 claude plugin marketplace add humandebri/kinic-superpowers
