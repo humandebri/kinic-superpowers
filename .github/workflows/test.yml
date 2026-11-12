@@ -11,17 +11,18 @@ permissions:
 jobs:
   kinic:
     name: Kinic adapter (Python ${{ matrix.python }})
-    runs-on: ubuntu-latest
+    # Pinned: setup-python has no Python 3.9 build for newer Ubuntu images.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         python: ["3.9", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # test_upstream_contract compares against the pinned upstream commit.
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
       - name: Kinic unit tests (fake CLI transport, no network)
@@ -40,8 +41,8 @@ jobs:
       run:
         working-directory: tests/brainstorm-server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Install test dependencies
