@@ -30,14 +30,21 @@ jobs:
         run: bash tests/hooks/test-session-start.sh
       - name: Shell lint script
         run: bash tests/shell-lint/test-lint-shell.sh
+      - name: Antigravity manifest
+        run: bash tests/antigravity/test-plugin-manifest.sh
 
-  brainstorm-branding:
-    name: Visual companion branding
+  brainstorm-server:
+    name: Visual companion server
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/brainstorm-server
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Telemetry stays opt-in
-        run: node tests/brainstorm-server/branding.test.js
+      - name: Install test dependencies
+        run: npm ci
+      - name: Server, branding and lifecycle tests
+        run: npm test
