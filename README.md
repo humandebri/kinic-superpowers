@@ -33,6 +33,10 @@ instead of silently overwritten.
 | Claude Code | Supported through this repository's marketplace. |
 | Other harnesses (Cursor, Gemini, OpenCode, Kimi, ...) | Manifests are inherited from upstream and still point to upstream Superpowers. They are not Kinic distributions. |
 
+Unlike upstream, the brainstorming visual companion does not load the remote
+Prime Radiant logo (which reports the Superpowers version to upstream) unless you
+set `SUPERPOWERS_ENABLE_TELEMETRY=1`. Upstream's opt-out variables still win.
+
 This is an early fork (version 0.1.x). Interfaces and configuration may still
 change; see [RELEASE-NOTES.md](RELEASE-NOTES.md).
 

@@ -109,6 +109,13 @@ const TELEMETRY_DISABLE_ENV_VARS = [
   'DISABLE_TELEMETRY',
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC'
 ];
+// KINIC ADAPTATION START
+// Kinic fork: the remote logo request reports usage to upstream, so it is
+// opt-in. Set SUPERPOWERS_ENABLE_TELEMETRY to load it; any opt-out still wins.
+if (!isTruthyEnv(process.env.SUPERPOWERS_ENABLE_TELEMETRY)) {
+  process.env.SUPERPOWERS_DISABLE_TELEMETRY = '1';
+}
+// KINIC ADAPTATION END
 const SUPERPOWERS_TELEMETRY_DISABLED = TELEMETRY_DISABLE_ENV_VARS.some(name => isTruthyEnv(process.env[name]));
 let ownerPid = process.env.BRAINSTORM_OWNER_PID ? Number(process.env.BRAINSTORM_OWNER_PID) : null;
 

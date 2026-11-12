@@ -31,6 +31,8 @@ class UpstreamContractTests(unittest.TestCase):
                 continue
             original = subprocess.check_output(['git', 'show', f'{BASE}:{path}'], cwd=ROOT, text=True)
             current = (ROOT / path).read_text().replace('kinic-superpowers:', 'superpowers:')
+            # Explicit, documented code adaptations (see docs/kinic/upstream/contract.md).
+            current = re.sub(r'// KINIC ADAPTATION START\n.*?// KINIC ADAPTATION END\n', '', current, flags=re.S)
             self.assertEqual(current, original, path)
 
     def test_protocol_does_not_impose_five_document_gate(self):
