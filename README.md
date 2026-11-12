@@ -45,16 +45,26 @@ change; see [RELEASE-NOTES.md](RELEASE-NOTES.md).
 
 1. **Python 3.9 or newer** available as `python3` on the PATH your agent's hooks
    use.
-2. **`kinic-vfs-cli`**, installed and authenticated:
+2. **`kinic-vfs-cli` and [`icp-cli`](https://github.com/dfinity/icp-cli)** on
+   `PATH`. `kinic-vfs-cli` signs authenticated commands through the separate
+   `icp` executable, so install both:
 
    ```bash
-   npm install -g kinic-vfs-cli
+   npm install -g kinic-vfs-cli @icp-sdk/icp-cli
    ```
 
-   Authenticated commands use the identity selected by `icp-cli`
-   (`icp identity default`), normally an Internet Identity linked with
-   `icp identity link ii`. See the
-   [CLI guide](https://wiki.kinic.xyz/docs/cli) for identity setup.
+   Then link an Internet Identity against the Kinic Wiki canister and make it
+   the default identity:
+
+   ```bash
+   icp identity link ii kinic-ii --host https://6emaw-iyaaa-aaaay-aacka-cai.icp0.io
+   ```
+
+   ```bash
+   icp identity default kinic-ii
+   ```
+
+   See the [CLI guide](https://wiki.kinic.xyz/docs/cli) for identity details.
 3. **A Kinic Wiki database you can write to.** Your first database is created
    with a free initial cycles grant:
 
