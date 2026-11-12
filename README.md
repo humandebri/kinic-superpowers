@@ -13,8 +13,9 @@ instead of silently overwritten.
 
 ## What this fork adds
 
-- **Project setup.** The `setup-kinic` skill finds your Kinic database, verifies write access and registers the repository
-  under a stable Wiki scope such as `/Knowledge/<repository-name>`.
+- **Project setup.** The `setup-kinic` skill finds your Kinic database,
+  verifies write access and registers the repository under a stable Wiki scope
+  such as `/Knowledge/<repository-name>`.
 - **Workflows per chat.** One repository can hold many pieces of work
   ("workflows"). Each chat selects one, so parallel chats do not mix their specs
   and plans.
@@ -50,9 +51,9 @@ change; see [RELEASE-NOTES.md](RELEASE-NOTES.md).
    npm install -g kinic-vfs-cli
    ```
 
-   Authenticated commands use the identity selected by
-   `icp-cli` (`icp identity default`),
-   normally an Internet Identity linked with `icp identity link ii`. See the
+   Authenticated commands use the identity selected by `icp-cli`
+   (`icp identity default`), normally an Internet Identity linked with
+   `icp identity link ii`. See the
    [CLI guide](https://wiki.kinic.xyz/docs/cli) for identity setup.
 3. **A Kinic Wiki database you can write to.** Your first database is created
    with a free initial cycles grant:
@@ -124,8 +125,8 @@ please report fork-specific issues there, not to upstream.
 
 > The rest of this file is the upstream Superpowers README, kept for reference.
 > Its installation commands install **upstream Superpowers**, not this fork, and
-> its contribution, community and commercial sections refer to the upstream
-> project. Use the sections above to install and contribute to Kinic Superpowers.
+> its contribution, community, commercial and telemetry sections describe the
+> upstream project (this fork keeps telemetry off by default, see Status). Use the sections above to install and contribute to Kinic Superpowers.
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
