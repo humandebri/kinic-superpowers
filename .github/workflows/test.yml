@@ -1,0 +1,51 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  kinic:
+    name: Kinic adapter (Python ${{ matrix.python }})
+    # Pinned: setup-python has no Python 3.9 build for newer Ubuntu images.
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # test_upstream_contract compares against the pinned upstream commit.
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Kinic unit tests (fake CLI transport, no network)
+        run: python -m unittest discover -s tests/kinic -v
+      - name: Session start hook
+        run: bash tests/hooks/test-session-start.sh
+      - name: Shell lint script
+        run: bash tests/shell-lint/test-lint-shell.sh
+      - name: Antigravity manifest
+        run: bash tests/antigravity/test-plugin-manifest.sh
+
+  brainstorm-server:
+    name: Visual companion server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/brainstorm-server
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Install test dependencies
+        run: npm ci
+      - name: Server, branding and lifecycle tests
+        run: npm test

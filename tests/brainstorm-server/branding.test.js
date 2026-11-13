@@ -14,6 +14,7 @@ const PACKAGE_VERSION = JSON.parse(
   fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')
 ).version;
 const TOKEN = 'testtoken-branding-0123456789abcdef';
+const ENABLE = { SUPERPOWERS_ENABLE_TELEMETRY: '1' };
 const ASSET_URL = 'https://primeradiant.com/brand/superpowers-visual-brainstorming-logo.png';
 
 function cleanup(dir) {
@@ -242,10 +243,32 @@ function assertHeaderAvoidsNarrowOverlap(html) {
 async function main() {
   console.log('\n--- Visual Companion Branding ---');
 
-  await test('framed screens render versioned Prime Radiant logo by default', async () => {
+  await test('telemetry is off by default: no remote image, local branding kept', async () => {
+    const port = 3458;
+    const dir = '/tmp/brainstorm-branding-default-off';
+    await withServer({ port, dir }, async () => {
+      writeFragment(dir);
+      await sleep(300);
+      const html = await fetchHtml(port);
+      assertBrandedFallbackText(html);
+      assert(!html.includes(ASSET_URL), 'default should omit the remote image');
+    });
+  });
+
+  await test('waiting screen omits the remote image by default', async () => {
+    const port = 3459;
+    const dir = '/tmp/brainstorm-branding-default-off-waiting';
+    await withServer({ port, dir }, async () => {
+      const html = await fetchHtml(port);
+      assertBrandedFallbackText(html);
+      assert(!html.includes(ASSET_URL), 'default should omit the remote image');
+    });
+  });
+
+  await test('framed screens render versioned Prime Radiant logo when telemetry is enabled', async () => {
     const port = 3451;
     const dir = '/tmp/brainstorm-branding-default';
-    await withServer({ port, dir }, async () => {
+    await withServer({ port, dir, env: ENABLE }, async () => {
       writeFragment(dir);
       await sleep(300);
       const html = await fetchHtml(port);
@@ -258,10 +281,10 @@ async function main() {
     });
   });
 
-  await test('waiting screen renders versioned Prime Radiant logo by default', async () => {
+  await test('waiting screen renders versioned Prime Radiant logo when telemetry is enabled', async () => {
     const port = 3452;
     const dir = '/tmp/brainstorm-branding-waiting';
-    await withServer({ port, dir }, async () => {
+    await withServer({ port, dir, env: ENABLE }, async () => {
       const html = await fetchHtml(port);
       assert(html.includes('Waiting for the agent'), 'waiting page should still render');
       assertBrandedWithLogo(html);
@@ -277,7 +300,7 @@ async function main() {
     const fixture = createPackagedServerFixture(packagedVersion);
 
     try {
-      await withServer({ port, dir, serverPath: fixture.serverPath }, async () => {
+      await withServer({ port, dir, env: ENABLE, serverPath: fixture.serverPath }, async () => {
         writeFragment(dir);
         await sleep(300);
         const html = await fetchHtml(port);
@@ -293,7 +316,7 @@ async function main() {
   await test('SUPERPOWERS_DISABLE_TELEMETRY=true omits remote image but keeps local branding', async () => {
     const port = 3453;
     const dir = '/tmp/brainstorm-branding-disabled';
-    await withServer({ port, dir, env: { SUPERPOWERS_DISABLE_TELEMETRY: 'true' } }, async () => {
+    await withServer({ port, dir, env: { ...ENABLE, SUPERPOWERS_DISABLE_TELEMETRY: 'true' } }, async () => {
       writeFragment(dir);
       await sleep(300);
       const html = await fetchHtml(port);
@@ -305,7 +328,7 @@ async function main() {
   await test('SUPERPOWERS_DISABLE_TELEMETRY=yes also omits the remote image on the waiting screen', async () => {
     const port = 3454;
     const dir = '/tmp/brainstorm-branding-disabled-waiting';
-    await withServer({ port, dir, env: { SUPERPOWERS_DISABLE_TELEMETRY: 'yes' } }, async () => {
+    await withServer({ port, dir, env: { ...ENABLE, SUPERPOWERS_DISABLE_TELEMETRY: 'yes' } }, async () => {
       const html = await fetchHtml(port);
       assertBrandedFallbackText(html);
       assert(!html.includes(ASSET_URL), 'disabled telemetry should omit the remote image');
@@ -315,7 +338,7 @@ async function main() {
   await test('DISABLE_TELEMETRY=true omits remote image for Claude Code telemetry opt-out', async () => {
     const port = 3455;
     const dir = '/tmp/brainstorm-branding-claude-disable-telemetry';
-    await withServer({ port, dir, env: { DISABLE_TELEMETRY: 'true' } }, async () => {
+    await withServer({ port, dir, env: { ...ENABLE, DISABLE_TELEMETRY: 'true' } }, async () => {
       writeFragment(dir);
       await sleep(300);
       const html = await fetchHtml(port);
@@ -327,7 +350,7 @@ async function main() {
   await test('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 omits remote image for Claude Code traffic opt-out', async () => {
     const port = 3456;
     const dir = '/tmp/brainstorm-branding-claude-disable-nonessential';
-    await withServer({ port, dir, env: { CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1' } }, async () => {
+    await withServer({ port, dir, env: { ...ENABLE, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1' } }, async () => {
       const html = await fetchHtml(port);
       assertBrandedFallbackText(html);
       assert(!html.includes(ASSET_URL), 'Claude Code non-essential traffic opt-out should omit the remote image');

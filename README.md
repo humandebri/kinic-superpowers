@@ -1,13 +1,145 @@
 # Kinic Superpowers
 
-> A fork of [obra/superpowers](https://github.com/obra/superpowers) with Kinic Wiki
-> as the source for design, plans, progress, reviews and completion. It adds
-> automatic project setup, chat-specific workflow selection and a local Codex
-> plugin for starting and resuming work. Start with
-> [Codex installation](docs/kinic/codex.md),
-> [Kinic setup and limitations](docs/kinic/README.md) and [project intent](PROJECT.md).
-> Upstream history and MIT attribution are retained. The original Superpowers
-> documentation follows; use the Kinic installation instructions for this fork.
+Kinic Superpowers is a fork of [obra/superpowers](https://github.com/obra/superpowers)
+that keeps its development method (brainstorm, spec, plan, test-driven
+implementation, review) and stores the documents that method produces in
+[Kinic Wiki](https://wiki.kinic.xyz) instead of loose local files. Specs, plans,
+progress ledgers, reviews and completion reports become versioned Wiki pages
+that any chat, agent or clone of the repository can resume from.
+
+Source code, tests and Git operations stay local. Only workflow documents go to
+the Wiki, and every write is guarded by an etag so concurrent edits are detected
+instead of silently overwritten.
+
+## What this fork adds
+
+- **Project setup.** The `setup-kinic` skill finds your Kinic database,
+  verifies write access and registers the repository under a stable Wiki scope
+  such as `/Knowledge/<repository-name>`.
+- **Workflows per chat.** One repository can hold many pieces of work
+  ("workflows"). Each chat selects one, so parallel chats do not mix their specs
+  and plans.
+- **Wiki-backed documents.** `check`, `pull` and `push` keep local working
+  copies in sync with Wiki pages and refuse to overwrite unpublished or
+  conflicting changes.
+- **Stays out of the way.** In a repository without `.kinic-superpowers.json`
+  the session hook prints nothing, so unconfigured projects behave as if the
+  plugin were not installed.
+
+## Status
+
+| Harness | State |
+|---|---|
+| Codex (desktop and CLI) | Supported. Installed-plugin sessions have been checked with the Codex CLI. |
+| Claude Code | In progress. The marketplace installs the plugin as `kinic-superpowers`, but the Kinic session hook for Claude Code has not landed yet, so configured projects still get upstream behavior. |
+| Other harnesses (Cursor, Gemini, OpenCode, Kimi, ...) | Manifests are inherited from upstream and still point to upstream Superpowers. They are not Kinic distributions. |
+
+Unlike upstream, the brainstorming visual companion does not load the remote
+Prime Radiant logo (which reports the Superpowers version to upstream) unless you
+set `SUPERPOWERS_ENABLE_TELEMETRY=1`. Upstream's opt-out variables still win.
+
+This is an early fork (version 0.1.x). Interfaces and configuration may still
+change; see [RELEASE-NOTES.md](RELEASE-NOTES.md).
+
+## Requirements
+
+1. **Python 3.9 or newer** available as `python3` on the PATH your agent's hooks
+   use.
+2. **`kinic-vfs-cli` and [`icp-cli`](https://github.com/dfinity/icp-cli)** on
+   `PATH`. `kinic-vfs-cli` signs authenticated commands through the separate
+   `icp` executable, so install both:
+
+   ```bash
+   npm install -g kinic-vfs-cli @icp-sdk/icp-cli
+   ```
+
+   Then link an Internet Identity against the Kinic Wiki canister and make it
+   the default identity:
+
+   ```bash
+   icp identity link ii kinic-ii --host https://6emaw-iyaaa-aaaay-aacka-cai.icp0.io
+   ```
+
+   ```bash
+   icp identity default kinic-ii
+   ```
+
+   See the [CLI guide](https://wiki.kinic.xyz/docs/cli) for identity details.
+3. **A Kinic Wiki database you can write to.** Your first database is created
+   with a free initial cycles grant:
+
+   ```bash
+   kinic-vfs-cli database create "My project workflows"
+   ```
+
+## Install
+
+Install the fork separately for each harness you use. If upstream Superpowers is
+also installed, disable it in configured repositories so two bootstraps do not
+compete.
+
+### Codex
+
+```bash
+codex plugin marketplace add humandebri/kinic-superpowers
+codex plugin add kinic-superpowers@kinic-superpowers-local
+```
+
+Restart the app, then review and trust the plugin's hook in `/hooks`. Installing
+does not trust hooks automatically. Details, including hosting the plugin inside
+another repository's marketplace, are in [Codex installation](docs/kinic/codex.md).
+
+### Claude Code
+
+Claude Code support is in progress (see Status). Once the Kinic session hook
+lands, install with:
+
+```bash
+claude plugin marketplace add humandebri/kinic-superpowers
+claude plugin install kinic-superpowers@kinic-superpowers-local
+```
+
+Restart Claude Code after installing or updating. To keep upstream Superpowers
+out of a configured repository, disable it under `enabledPlugins` in that
+project's `.claude/settings.json`.
+
+## Set up a project
+
+Open your application repository in the agent and ask:
+
+> Set up this project for Kinic Wiki.
+
+The `setup-kinic` skill discovers your CLI connection and database, asks you to
+choose when several databases qualify, and writes a Git-ignored
+`.kinic-superpowers.json`. No credentials are stored in it. Open a **new chat**
+afterwards so the session hook can pick up the configuration.
+
+Then work as you would with Superpowers ("Let's build a todo list"). The agent
+lists existing workflows or creates a new one, and saves each document to the
+Wiki when the upstream skill would normally write it to disk.
+
+## Documentation
+
+- [Kinic setup, commands and limits](docs/kinic/README.md)
+- [Codex installation and hook trust](docs/kinic/codex.md)
+- [Workflow protocol used by the skills](skills/using-superpowers/references/kinic-workflow.md)
+- [Correspondence with upstream skills](docs/kinic/upstream/contract.md)
+
+## License and attribution
+
+MIT, see [LICENSE](LICENSE). The original Superpowers copyright (Jesse Vincent)
+and upstream history are retained. This fork is maintained separately at
+[humandebri/kinic-superpowers](https://github.com/humandebri/kinic-superpowers);
+please report fork-specific issues there, not to upstream.
+
+---
+
+# Upstream Superpowers documentation
+
+> The rest of this file is the upstream Superpowers README, kept for reference.
+> Its installation commands install **upstream Superpowers**, not this fork, and
+> its contribution, community, commercial and telemetry sections describe the
+> upstream project (this fork keeps telemetry off by default, see Status). Use the sections above to install and contribute to Kinic Superpowers.
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 

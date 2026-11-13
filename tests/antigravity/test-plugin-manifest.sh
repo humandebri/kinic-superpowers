@@ -51,10 +51,14 @@ if not all(isinstance(p, str) and p.strip() for p in prompts):
 
 claude_manifest = json.loads(
     (root / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
-if manifest["version"] != claude_manifest["version"]:
+# Kinic fork: .claude-plugin is the kinic-superpowers distribution, while this
+# manifest is retained upstream metadata that the fork does not publish. Keep
+# version and author in step only while both describe the same plugin.
+distributed = claude_manifest["name"] == manifest["name"]
+if distributed and manifest["version"] != claude_manifest["version"]:
     fail(f"version {manifest['version']!r} != .claude-plugin version "
          f"{claude_manifest['version']!r}")
-if manifest["author"] != claude_manifest["author"]:
+if distributed and manifest["author"] != claude_manifest["author"]:
     fail("author does not match .claude-plugin/plugin.json")
 
 # --- Logo ------------------------------------------------------------------
@@ -70,7 +74,7 @@ if width != height or width < 128:
 
 # --- Version bumps ---------------------------------------------------------
 version_config = json.loads((root / ".version-bump.json").read_text(encoding="utf-8"))
-if not any(entry.get("path") == ".antigravity-plugin/plugin.json"
+if distributed and not any(entry.get("path") == ".antigravity-plugin/plugin.json"
            and entry.get("field") == "version"
            for entry in version_config.get("files", [])):
     fail(".version-bump.json does not register .antigravity-plugin/plugin.json")
@@ -80,7 +84,9 @@ if not any(entry.get("path") == ".antigravity-plugin/plugin.json"
 skill_md = (root / "skills" / "using-superpowers" / "SKILL.md").read_text(encoding="utf-8")
 frontmatter = re.match(r"---\n(.*?)\n---\n", skill_md, re.DOTALL)
 description = frontmatter and re.search(r"^description:(.*)$", frontmatter.group(1), re.MULTILINE)
-if not description or "Use when starting any conversation" not in description.group(1):
+# The fork scopes using-superpowers to configured Kinic projects on purpose, so
+# this bootstrap contract only holds while the Antigravity plugin is distributed.
+if distributed and (not description or "Use when starting any conversation" not in description.group(1)):
     fail("using-superpowers description no longer says 'Use when starting any "
          "conversation'; Antigravity relies on it to bootstrap")
 

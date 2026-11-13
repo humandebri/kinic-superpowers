@@ -14,6 +14,7 @@ The user approved this redesign on 2026-10-16. Wiki remains the document authori
 | Ledger first line is `# SDD ledger — plan: <plan file path>` | Generated `# title: progress` / Design template | Preserve exact helper ledger format; restore into helper-resolved workspace |
 | `sdd-workspace` uses plan basename plus marker-based collision handling | UUID directory forced | Use helper-compatible local mapping; validate plan identity on resume |
 | Final response includes exhaustive rulings/deferred minors; workspace then removed | All five roles including completion mandatory | Save actual final report/ledger before local cleanup; no mandatory empty review/completion pages |
+| brainstorming visual companion loads the Prime Radiant logo by default, reporting the Superpowers version to upstream | — | Off by default in this fork; `SUPERPOWERS_ENABLE_TELEMETRY` opts in and upstream opt-outs still win. The only code change is a `// KINIC ADAPTATION` block in `server.cjs`, which the contract test strips before comparing |
 | Code and commits remain in Git | Wiki references sometimes treated as sufficient proof | Verify cited Git commits and test evidence locally; Wiki cannot substitute for code verification |
 
 ## Storage boundary
